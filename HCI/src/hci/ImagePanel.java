@@ -1,5 +1,4 @@
 package hci;
-//finalcheck
 import javax.imageio.ImageIO;
 import javax.swing.JPanel;
 
@@ -141,7 +140,7 @@ public class ImagePanel extends JPanel implements MouseListener {
 	}
 	
 	/**
-	 * moves current polygon to the list of polygons and makes pace for a new one
+	 * moves current polygon to the list of polygons and makes space for a new one
 	 */
 	public void addNewPolygon() {
 		//finish the current polygon if any
