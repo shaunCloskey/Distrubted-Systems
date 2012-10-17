@@ -34,20 +34,19 @@ public class ImagePanel extends JPanel implements MouseListener {
 	/**
 	 * list of current polygon's vertices 
 	 */
-	ArrayList<Point> currentPolygon = null;
+	ArrayList<Point> currentPolygon = new ArrayList<Point>();
 	
 	/**
 	 * list of polygons
 	 */
-	ArrayList<ArrayList<Point>> polygonsList = null;
+	ArrayList<ArrayList<Point>> polygonsList = new ArrayList<ArrayList<Point>>();
 	
 	/**
 	 * default constructor, sets up the window properties
 	 */
-	public ImagePanel() {
+	public ImagePanel(ArrayList<ArrayList<Point>> objects) {
 		currentPolygon = new ArrayList<Point>();
-		polygonsList = new ArrayList<ArrayList<Point>>();
-
+		polygonsList = objects;
 		this.setVisible(true);
 
 		Dimension panelSize = new Dimension(800, 600);
@@ -64,8 +63,8 @@ public class ImagePanel extends JPanel implements MouseListener {
 	 * @param imageName - path to image
 	 * @throws Exception if error loading the image
 	 */
-	public ImagePanel(String imageName) throws Exception{
-		this();
+	public ImagePanel(String imageName,ArrayList<ArrayList<Point>> objects) throws Exception{
+		this(objects);
 		image = ImageIO.read(new File(imageName));
 		if (image.getWidth() > 800 || image.getHeight() > 600) {
 			int newWidth = image.getWidth() > 800 ? 800 : (image.getWidth() * 600)/image.getHeight();
@@ -89,14 +88,21 @@ public class ImagePanel extends JPanel implements MouseListener {
 		}
 	}
 	
+	public ArrayList<ArrayList<Point>> returnPolygons(){
+		return polygonsList;
+	}
+	
 	@Override
 	public void paint(Graphics g) {
 		super.paint(g);
 		
-		//display iamge
+		//display image
 		ShowImage();
 		
 		//display all the completed polygons
+		if(polygonsList.isEmpty()){
+			return;
+		}else{
 		for(ArrayList<Point> polygon : polygonsList) {
 			drawPolygon(polygon);
 			finishPolygon(polygon);
@@ -104,6 +110,7 @@ public class ImagePanel extends JPanel implements MouseListener {
 		
 		//display current polygon
 		drawPolygon(currentPolygon);
+		}
 	}
 	
 	/**
@@ -157,7 +164,7 @@ public class ImagePanel extends JPanel implements MouseListener {
 		int x = e.getX();
 		int y = e.getY();
 		
-		//check if the cursos withing image area
+		//check if the cursor within image area
 		if (x > image.getWidth() || y > image.getHeight()) {
 			//if not do nothing
 			return;
