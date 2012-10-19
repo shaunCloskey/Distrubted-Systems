@@ -1,5 +1,4 @@
 package hci;
-
 import javax.imageio.ImageIO;
 import javax.swing.JPanel;
 
@@ -31,24 +30,23 @@ public class ImagePanel extends JPanel implements MouseListener {
 	 * image to be tagged
 	 */
 	BufferedImage image = null;
-	
+
 	/**
 	 * list of current polygon's vertices 
 	 */
-	ArrayList<Point> currentPolygon = null;
-	
+	ArrayList<Point> currentPolygon = new ArrayList<Point>();
+
 	/**
 	 * list of polygons
 	 */
-	ArrayList<ArrayList<Point>> polygonsList = null;
-	
+	ArrayList<ArrayList<Point>> polygonsList = new ArrayList<ArrayList<Point>>();
+
 	/**
 	 * default constructor, sets up the window properties
 	 */
-	public ImagePanel() {
+	public ImagePanel(ArrayList<ArrayList<Point>> objects) {
 		currentPolygon = new ArrayList<Point>();
-		polygonsList = new ArrayList<ArrayList<Point>>();
-
+		polygonsList = objects;
 		this.setVisible(true);
 
 		Dimension panelSize = new Dimension(800, 600);
@@ -56,17 +54,17 @@ public class ImagePanel extends JPanel implements MouseListener {
 		this.setMinimumSize(panelSize);
 		this.setPreferredSize(panelSize);
 		this.setMaximumSize(panelSize);
-		
+
 		addMouseListener(this);
 	}
-	
+
 	/**
 	 * extended constructor - loads image to be labelled
 	 * @param imageName - path to image
 	 * @throws Exception if error loading the image
 	 */
-	public ImagePanel(String imageName) throws Exception{
-		this();
+	public ImagePanel(String imageName,ArrayList<ArrayList<Point>> objects) throws Exception{
+		this(objects);
 		image = ImageIO.read(new File(imageName));
 		if (image.getWidth() > 800 || image.getHeight() > 600) {
 			int newWidth = image.getWidth() > 800 ? 800 : (image.getWidth() * 600)/image.getHeight();
@@ -83,30 +81,38 @@ public class ImagePanel extends JPanel implements MouseListener {
 	 */
 	public void ShowImage() {
 		Graphics g = this.getGraphics();
-		
+
 		if (image != null) {
 			g.drawImage(
 					image, 0, 0, null);
 		}
 	}
-	
+
+	public ArrayList<ArrayList<Point>> returnPolygons(){
+		return polygonsList;
+	}
+
 	@Override
 	public void paint(Graphics g) {
 		super.paint(g);
-		
-		//display iamge
+
+		//display image
 		ShowImage();
-		
+
 		//display all the completed polygons
+		if(polygonsList.isEmpty()){
+			return;
+		}else{
 		for(ArrayList<Point> polygon : polygonsList) {
 			drawPolygon(polygon);
 			finishPolygon(polygon);
 		}
-		
+
 		//display current polygon
 		drawPolygon(currentPolygon);
+		}
 	}
-	
+
 	/**
 	 * displays a polygon without last stroke
 	 * @param polygon to be displayed
@@ -123,7 +129,7 @@ public class ImagePanel extends JPanel implements MouseListener {
 			g.fillOval(currentVertex.getX() - 5, currentVertex.getY() - 5, 10, 10);
 		}
 	}
-	
+
 	/**
 	 * displays last stroke of the polygon (arch between the last and first vertices)
 	 * @param polygon to be finished
@@ -133,15 +139,15 @@ public class ImagePanel extends JPanel implements MouseListener {
 		if (polygon.size() >= 3) {
 			Point firstVertex = polygon.get(0);
 			Point lastVertex = polygon.get(polygon.size() - 1);
-		
+
 			Graphics2D g = (Graphics2D)this.getGraphics();
 			g.setColor(Color.GREEN);
 			g.drawLine(firstVertex.getX(), firstVertex.getY(), lastVertex.getX(), lastVertex.getY());
 		}
 	}
-	
+
 	/**
-	 * moves current polygon to the list of polygons and makes pace for a new one
+	 * moves current polygon to the list of polygons and makes space for a new one
 	 */
 	public void addNewPolygon() {
 		//finish the current polygon if any
@@ -149,7 +155,7 @@ public class ImagePanel extends JPanel implements MouseListener {
 			finishPolygon(currentPolygon);
 			polygonsList.add(currentPolygon);
 		}
-		
+
 		currentPolygon = new ArrayList<Point>();
 	}
 
@@ -157,15 +163,15 @@ public class ImagePanel extends JPanel implements MouseListener {
 	public void mouseClicked(MouseEvent e) {
 		int x = e.getX();
 		int y = e.getY();
-		
-		//check if the cursos withing image area
+
+		//check if the cursor within image area
 		if (x > image.getWidth() || y > image.getHeight()) {
 			//if not do nothing
 			return;
 		}
-		
+
 		Graphics2D g = (Graphics2D)this.getGraphics();
-		
+
 		//if the left button than we will add a vertex to poly
 		if (e.getButton() == MouseEvent.BUTTON1) {
 			g.setColor(Color.GREEN);
@@ -174,7 +180,7 @@ public class ImagePanel extends JPanel implements MouseListener {
 				g.drawLine(lastVertex.getX(), lastVertex.getY(), x, y);
 			}
 			g.fillOval(x-5,y-5,10,10);
-			
+
 			currentPolygon.add(new Point(x,y));
 			System.out.println(x + " " + y);
 		} 
@@ -195,5 +201,5 @@ public class ImagePanel extends JPanel implements MouseListener {
 	@Override
 	public void mouseReleased(MouseEvent arg0) {
 	}
-	
+
 }

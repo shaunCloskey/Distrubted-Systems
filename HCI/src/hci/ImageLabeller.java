@@ -229,9 +229,9 @@ public class ImageLabeller extends JFrame{
 			//Let the user confirm the app closing.
 			window.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
 			window.setTitle("Image Labeler");
-			window.setupGUI("/afs/inf.ed.ac.uk/user/s09/s0903605/workspace/HCI/src/images/U1003_0000.jpg");
+			window.setupGUI("./images/U1003_0000.jp");
 		} catch (Exception e) {
-			System.err.println("Image: " + "/afs/inf.ed.ac.uk/user/s09/s0903605/workspace/HCI/src/images/U1003_0000.jpg");
+			System.err.println("Image: " + "./images/U1003_0000.jp");
 			e.printStackTrace();
 		}
 	}
