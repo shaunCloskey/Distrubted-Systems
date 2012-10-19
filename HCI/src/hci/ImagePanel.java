@@ -1,5 +1,7 @@
 package hci;
 import javax.imageio.ImageIO;
+import javax.swing.JFrame;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 
 import java.awt.Color;
@@ -35,7 +37,7 @@ public class ImagePanel extends JPanel implements MouseListener {
 	 * list of current polygon's vertices 
 	 */
 	ArrayList<Point> currentPolygon = new ArrayList<Point>();
-
+	
 	/**
 	 * list of polygons
 	 */
@@ -143,6 +145,8 @@ public class ImagePanel extends JPanel implements MouseListener {
 			Graphics2D g = (Graphics2D)this.getGraphics();
 			g.setColor(Color.GREEN);
 			g.drawLine(firstVertex.getX(), firstVertex.getY(), lastVertex.getX(), lastVertex.getY());
+		}else{
+		
 		}
 	}
 
@@ -152,8 +156,14 @@ public class ImagePanel extends JPanel implements MouseListener {
 	public void addNewPolygon() {
 		//finish the current polygon if any
 		if (currentPolygon != null ) {
-			finishPolygon(currentPolygon);
-			polygonsList.add(currentPolygon);
+			if(currentPolygon.size() >= 3){
+				finishPolygon(currentPolygon);
+				polygonsList.add(currentPolygon);
+			}else{
+				System.out.print("current poylgon has less than 3 points");
+				JOptionPane.showMessageDialog(null, "current poylgon has less than 3 points");
+				return;
+			}
 		}
 
 		currentPolygon = new ArrayList<Point>();
