@@ -4,10 +4,14 @@ import hci.utils.Point;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JFrame;
+import javax.swing.JList;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.ListSelectionModel;
 import javax.swing.WindowConstants;
 
+import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -60,6 +64,12 @@ public class ImageLabeller extends JFrame{
 	 * tool box - put all buttons and stuff here!
 	 */
 	JPanel toolboxPanel = null;
+	
+	
+	/**
+	 * contains all the names of the polygons
+	 */
+	JList nameList = null;
 
 	/**
 	 * image panel - displays image and editing area
@@ -181,8 +191,23 @@ public class ImageLabeller extends JFrame{
 		newPolyButton.setToolTipText("Click to save outlined object");
 		
 		
-
+		//add all the names of the polygons to a JList 
+		String [] name = new String[polygonNames.size()];
+		int polyIndex = 0;
+		for(String internalName : polygonNames)
+		{
+			name[polyIndex] = internalName;
+			polyIndex++;
+		}
+		nameList = new JList(name);
+		nameList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		nameList.setLayoutOrientation(JList.VERTICAL);
+		nameList.setVisibleRowCount(-1);
+		JScrollPane listScroller = new JScrollPane(nameList);
+		listScroller.setPreferredSize(new Dimension(250, 80));
+		
 		toolboxPanel.add(newPolyButton);
+		toolboxPanel.add(listScroller);
 
 		//add toolbox to window
 		appPanel.add(toolboxPanel);
