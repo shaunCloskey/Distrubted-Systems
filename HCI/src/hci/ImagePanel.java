@@ -39,6 +39,11 @@ public class ImagePanel extends JPanel implements MouseListener {
 	ArrayList<Point> currentPolygon = new ArrayList<Point>();
 	
 	/**
+	 * list of all the names given to each of the polygons
+	 */
+	ArrayList<String> polygonNames = new ArrayList<String>();
+	
+	/**
 	 * list of polygons
 	 */
 	ArrayList<ArrayList<Point>> polygonsList = new ArrayList<ArrayList<Point>>();
@@ -77,6 +82,16 @@ public class ImagePanel extends JPanel implements MouseListener {
 			image.getGraphics().drawImage(scaledImage, 0, 0, this);
 		}
 	}
+	
+	/**
+	 * extended constructor - loads the polygon names across
+	 * @param nameObjects
+	 * @throws Exception if error with getting the names across
+	 */
+	public ImagePanel(String imageName,ArrayList<ArrayList<Point>> objects,ArrayList<String> polyNames) throws Exception{
+		this(imageName, objects);
+		polygonNames = polyNames;
+	}
 
 	/**
 	 * Displays the image
@@ -94,6 +109,10 @@ public class ImagePanel extends JPanel implements MouseListener {
 		return polygonsList;
 	}
 
+	public ArrayList<String> returnPolyNames(){
+		return polygonNames;
+	}
+	
 	@Override
 	public void paint(Graphics g) {
 		super.paint(g);
@@ -157,6 +176,8 @@ public class ImagePanel extends JPanel implements MouseListener {
 		//finish the current polygon if any
 		if (currentPolygon != null ) {
 			if(currentPolygon.size() >= 3){
+				String name = JOptionPane.showInputDialog("name the polygon");
+				polygonNames.add(name);
 				finishPolygon(currentPolygon);
 				polygonsList.add(currentPolygon);
 			}else{

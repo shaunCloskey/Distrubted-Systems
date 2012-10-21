@@ -40,7 +40,10 @@ public class ImageLabeller extends JFrame{
 	ArrayList<Point> currentPolygon = new ArrayList<Point>();
 
 
-
+	/**
+	 * list of all the names given to each of the polygons
+	 */
+	ArrayList<String> polygonNames = new ArrayList<String>();
 
 	/**
 	 * some java stuff to get rid of warnings
@@ -79,9 +82,11 @@ public class ImageLabeller extends JFrame{
 	 * @param imageFilename image to be loaded for editing
 	 * @throws Exception
 	 */
-	public void setupGUI(String imageFilename) throws Exception {
+	public void setupGUI(final String imageFilename) throws Exception {
 		this.addWindowListener(new WindowAdapter() {
 		  	public void windowClosing(WindowEvent event) {
+				imagePanel.setOpaque(true); //content panes must be opaque
+		  		
 		  		int confirmExit=0;
 		  		boolean save = false;
 		  		//Choose which confirmation message to display
@@ -106,12 +111,34 @@ public class ImageLabeller extends JFrame{
 					}
 					PrintWriter out = new PrintWriter(filey);
 		  			polygonsList = imagePanel.returnPolygons();
+		  			polygonNames = imagePanel.returnPolyNames();
+		  			
+		  			out.println("#");
+		  			int polyIndex = 0;
+		  			out.println(polygonNames.get(polyIndex));
+		  			boolean firstRun = true;
+		  			
 		  			for (ArrayList<Point> arrayCounter: polygonsList){
+		  				if(firstRun){
+		  					System.out.println("in the first run");
+		  				}
 		  				for(Point pointCounter: arrayCounter){
 		  						out.println(new Integer(pointCounter.getX()).toString());
 		  						out.println(new Integer(pointCounter.getY()).toString());
 		  				}
-		  				out.println("#");
+		  				if(firstRun){
+		  					System.out.println("finished printing the First points");
+		  				}
+		  				
+		  				if(!firstRun){
+		  					out.println("#");
+		  					polyIndex++;
+		  					if(polygonNames.size() > polyIndex)
+		  					{
+		  						out.println(polygonNames.get(polyIndex));
+		  					}
+		  				}
+		  				firstRun = false;
 		  			}
 				out.close();
 
@@ -132,7 +159,7 @@ public class ImageLabeller extends JFrame{
 		this.setContentPane(appPanel);
 
         //Create and set up the image panel.
-		imagePanel = new ImagePanel(imageFilename, polygonsList);
+		imagePanel = new ImagePanel(imageFilename, polygonsList, polygonNames);
 		imagePanel.setOpaque(true); //content panes must be opaque
 
         appPanel.add(imagePanel);
@@ -152,6 +179,8 @@ public class ImageLabeller extends JFrame{
 			}
 		});
 		newPolyButton.setToolTipText("Click to save outlined object");
+		
+		
 
 		toolboxPanel.add(newPolyButton);
 
@@ -185,6 +214,7 @@ public class ImageLabeller extends JFrame{
 		if(numberLines==0){
 			return;
 		}
+		
 		FileReader inFile = new FileReader("out.txt");
 		BufferedReader in = new BufferedReader(inFile);
 		int currentLine = 0;
@@ -202,6 +232,14 @@ public class ImageLabeller extends JFrame{
 				in.close();
 				return;
 			}
+			
+			xcoord = in.readLine();
+			System.out.println("object name : " + xcoord);
+			polygonNames.add(xcoord);
+			currentLine++;
+			
+			
+			
 		//y coord comes next
 		}else{
 		String ycoord = in.readLine();
