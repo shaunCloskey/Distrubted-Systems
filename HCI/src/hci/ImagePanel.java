@@ -172,11 +172,10 @@ public class ImagePanel extends JPanel implements MouseListener {
 	/**
 	 * moves current polygon to the list of polygons and makes space for a new one
 	 */
-	public void addNewPolygon() {
+	public void addNewPolygon(String name) {
 		//finish the current polygon if any
 		if (currentPolygon != null ) {
 			if(currentPolygon.size() >= 3){
-				String name = JOptionPane.showInputDialog("name the polygon");
 				polygonNames.add(name);
 				finishPolygon(currentPolygon);
 				polygonsList.add(currentPolygon);

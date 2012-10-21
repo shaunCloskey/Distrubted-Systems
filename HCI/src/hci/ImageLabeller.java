@@ -75,13 +75,41 @@ public class ImageLabeller extends JFrame{
 	 * image panel - displays image and editing area
 	 */
 	ImagePanel imagePanel = null;
+	
+	/**
+	 * used for the displaying of all names of the polygons
+	 */
+	JScrollPane listScroller;
+	
 	/**
 	 * handles New Object button action
 	 */
 	public void addNewPolygon() {
-		imagePanel.addNewPolygon();
+		String name = JOptionPane.showInputDialog("name the polygon");
+		imagePanel.addNewPolygon(name);
+		displayList(imagePanel.polygonNames);
+		appPanel.revalidate();
+		appPanel.repaint();
+		
 	}
-
+	
+	public void displayList(ArrayList<String> polygonNames) {
+		String [] name = new String[polygonNames.size()];
+		int polyIndex = 0;
+		for(String internalName : polygonNames)
+		{
+			name[polyIndex] = internalName;
+			polyIndex++;
+		}
+		nameList = new JList(name);
+		nameList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		nameList.setLayoutOrientation(JList.VERTICAL);
+		nameList.setVisibleRowCount(-1);
+		listScroller = new JScrollPane(nameList);
+		listScroller.setPreferredSize(new Dimension(150, 80));
+	}
+	
+	
 	@Override
 	public void paint(Graphics g) {
 		super.paint(g);
@@ -110,7 +138,7 @@ public class ImageLabeller extends JFrame{
 		  		}
 		  		if (((confirmExit < 2) && (save))||((!save) && (confirmExit == 0))){
 		  			if(save && confirmExit ==0){
-		  				imagePanel.addNewPolygon();
+		  				imagePanel.addNewPolygon("new unlabeled Polygon");
 		  			}
 		  			//write the objects to a file
 		  			FileWriter filey = null;
@@ -191,20 +219,8 @@ public class ImageLabeller extends JFrame{
 		newPolyButton.setToolTipText("Click to save outlined object");
 		
 		
-		//add all the names of the polygons to a JList 
-		String [] name = new String[polygonNames.size()];
-		int polyIndex = 0;
-		for(String internalName : polygonNames)
-		{
-			name[polyIndex] = internalName;
-			polyIndex++;
-		}
-		nameList = new JList(name);
-		nameList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-		nameList.setLayoutOrientation(JList.VERTICAL);
-		nameList.setVisibleRowCount(-1);
-		JScrollPane listScroller = new JScrollPane(nameList);
-		listScroller.setPreferredSize(new Dimension(250, 80));
+		
+		displayList(polygonNames);
 		
 		toolboxPanel.add(newPolyButton);
 		toolboxPanel.add(listScroller);
@@ -216,6 +232,8 @@ public class ImageLabeller extends JFrame{
 		this.pack();
         this.setVisible(true);
 	}
+
+	
 
 	int readLines() throws IOException{
 		//Just finds out how many lines are in the text file
