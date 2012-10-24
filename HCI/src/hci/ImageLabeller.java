@@ -11,6 +11,7 @@ import javax.swing.JScrollPane;
 import javax.swing.ListSelectionModel;
 import javax.swing.WindowConstants;
 
+
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.event.ActionEvent;
@@ -19,12 +20,14 @@ import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+
 
 /**
  * Main class of the program - handles display of the main window
@@ -81,6 +84,10 @@ public class ImageLabeller extends JFrame{
 	 */
 	JScrollPane listScroller;
 	
+	FileTree fileTree = new FileTree(new File("../HCI/src/images"));
+	
+	String currentFile ="U1003_0000";
+	
 	/**
 	 * handles New Object button action
 	 */
@@ -91,6 +98,19 @@ public class ImageLabeller extends JFrame{
 		appPanel.revalidate();
 		appPanel.repaint();
 		
+	}
+	
+	
+	public void load(){
+		System.out.println("tryng to load a file");
+		
+		while(fileTree.load()){
+			currentFile = fileTree.currentNode;
+		}
+		System.out.println("the currentfile is " + currentFile);
+		
+		// need to reload GUI with new fileName
+		//could have a while loop thats waits for the user to select a file when selected close FileTree and set CurrentFile to correct file
 	}
 	
 	public void displayList(ArrayList<String> polygonNames) {
@@ -141,12 +161,26 @@ public class ImageLabeller extends JFrame{
 		  				imagePanel.addNewPolygon("new unlabeled Polygon");
 		  			}
 		  			//write the objects to a file
+		  			
+		  			File f = new File(currentFile + ".txt");
+		  			if(!f.exists())
+		  			{
+		  				try {
+							f.createNewFile();
+						} catch (IOException e) {
+							e.printStackTrace();
+						}
+		  				System.out.println("New file \" " + currentFile + ".txt\" has been created to the current directory");
+		  			}
+		  			
+		  			
 		  			FileWriter filey = null;
 					try {
-						filey = new FileWriter("out.txt");
+						filey = new FileWriter( currentFile + ".txt");
 					} catch (IOException e1) {
 						e1.printStackTrace();
 					}
+					
 					PrintWriter out = new PrintWriter(filey);
 		  			polygonsList = imagePanel.returnPolygons();
 		  			polygonNames = imagePanel.returnPolyNames();
@@ -218,11 +252,25 @@ public class ImageLabeller extends JFrame{
 		});
 		newPolyButton.setToolTipText("Click to save outlined object");
 		
+		//add a button to load a picture
+		JButton loadButton = new JButton("Load a Picture");
+		loadButton.setMnemonic(KeyEvent.VK_N);
+		loadButton.setSize(50, 20);
+		loadButton.setEnabled(true);
+		loadButton.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				load();
+			}
+		});
+		newPolyButton.setToolTipText("click to load objects");
+		
 		
 		
 		displayList(polygonNames);
 		
 		toolboxPanel.add(newPolyButton);
+		toolboxPanel.add(loadButton);
 		toolboxPanel.add(listScroller);
 
 		//add toolbox to window
@@ -258,9 +306,18 @@ public class ImageLabeller extends JFrame{
 			return;
 		}
 		
-		FileReader inFile = new FileReader("out.txt");
+		File f = new File(currentFile + ".txt");
+		if(!f.exists())
+		{
+			f.createNewFile();
+			System.out.println("New file \" " + currentFile + ".txt\" has been created to the current directory");
+		}
+		
+		FileReader inFile = new FileReader(currentFile + ".txt");
+		
 		BufferedReader in = new BufferedReader(inFile);
 		int currentLine = 0;
+		
 		while(true){
 		String xcoord = in.readLine();
 		System.out.println(xcoord);
@@ -293,6 +350,7 @@ public class ImageLabeller extends JFrame{
 		//add these points to the current object
 		currentPolygon.add(tempPoint);
 		}
+		
 		}
 	}
 
@@ -317,3 +375,14 @@ public class ImageLabeller extends JFrame{
 		}
 	}
 }
+
+
+
+
+
+
+
+
+
+
+
