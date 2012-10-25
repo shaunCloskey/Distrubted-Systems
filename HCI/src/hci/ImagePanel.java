@@ -97,8 +97,14 @@ public class ImagePanel extends JPanel implements MouseListener {
 	 * Displays the image
 	 */
 	public void ShowImage() {
-		Graphics g = this.getGraphics();
 
+		Graphics g = this.getGraphics();
+		
+		if(g==null)
+		{
+			
+		}
+		
 		if (image != null) {
 			g.drawImage(
 					image, 0, 0, null);
@@ -111,6 +117,12 @@ public class ImagePanel extends JPanel implements MouseListener {
 
 	public ArrayList<String> returnPolyNames(){
 		return polygonNames;
+	}
+	
+	public void removePolys(){
+		polygonNames = new ArrayList<String>();
+		polygonsList = new ArrayList<ArrayList<Point>>();
+		currentPolygon = new ArrayList<Point>();
 	}
 	
 	@Override

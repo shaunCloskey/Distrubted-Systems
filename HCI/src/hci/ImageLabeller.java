@@ -96,7 +96,7 @@ public class ImageLabeller extends JFrame{
 	
 	String currentFile = "U1003_0000.jpg";
 	
-	String currentFileOut ="U1003_0000";
+	static String currentFileOut ="U1003_0000";
 	
 	JFrame loadFrame = new JFrame("load");
 	
@@ -152,6 +152,66 @@ public class ImageLabeller extends JFrame{
 	    return currentDir;
 	  }
 	
+	//save the polygons before loading
+	public void saveFile(){
+			imagePanel.setOpaque(true); //content panes must be opaque
+			
+			//write the objects to a file
+	  			
+	  			File f = new File(currentFileOut + ".txt");
+	  			if(!f.exists())
+	  			{
+	  				try {
+						f.createNewFile();
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+	  				System.out.println("New file \" " + currentFileOut + ".txt\" has been created to the current directory");
+	  			}
+	  			
+	  			
+	  			FileWriter filey = null;
+				try {
+					filey = new FileWriter( currentFileOut + ".txt");
+				} catch (IOException e1) {
+					e1.printStackTrace();
+				}
+				
+				PrintWriter out = new PrintWriter(filey);
+	  			polygonsList = imagePanel.returnPolygons();
+	  			polygonNames = imagePanel.returnPolyNames();
+	  			
+	  			out.println("#");
+	  			int polyIndex = 0;
+	  			if(polygonNames.size()!=0){
+	  				out.println(polygonNames.get(polyIndex));
+	  			}
+	  			boolean firstRun = true;
+	  			
+	  			for (ArrayList<Point> arrayCounter: polygonsList){
+	  				if(firstRun){
+	  					System.out.println("in the first run");
+	  				}
+	  				for(Point pointCounter: arrayCounter){
+	  						out.println(new Integer(pointCounter.getX()).toString());
+	  						out.println(new Integer(pointCounter.getY()).toString());
+	  				}
+	  				if(firstRun){
+	  					System.out.println("finished printing the First points");
+	  				}
+	  				
+	  				if(!firstRun){
+	  					out.println("#");
+	  					polyIndex++;
+	  					if(polygonNames.size() > polyIndex)
+	  					{
+	  						out.println(polygonNames.get(polyIndex));
+	  					}
+	  				}
+	  				firstRun = false;
+	  			}
+			out.close();
+	}
 	
 	
 	public void load(File dir){
@@ -179,26 +239,35 @@ public class ImageLabeller extends JFrame{
 		loadButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 			    	System.out.println("selected : " + currentNode);
+			    	
+			    	
+			    	saveFile();
+			    	
+			    	polygonsList = new ArrayList<ArrayList<Point>>();
+			    	currentPolygon = new ArrayList<Point>();
+			    	polygonNames = new ArrayList<String>();
+			    	
+			    	imagePanel.polygonsList = new ArrayList<ArrayList<Point>>();
+			    	imagePanel.currentPolygon = new ArrayList<Point>();
+			    	imagePanel.polygonNames = new ArrayList<String>();
+			    	
 			    	currentFile = currentNode;
+			    	
 			    	int stringIndex = currentFile.indexOf(".jpg");
 			    	currentFileOut = currentFile.substring(0, stringIndex);
 			    	
-			    	loadFrame.dispose();
-			    	
-			    	//need to call a function that will change the image, will setUpGui work?
-			    	try {
+					try {
 						reLoad(currentFile);
 					} catch (Exception e1) {
 						// TODO Auto-generated catch block
 						e1.printStackTrace();
 					}
-			    	
-			    	
+					
+			    	loadFrame.dispose();	
 			    	
 			}
 		});
 		loadButton.setToolTipText("Click to confirm the load");
-		
 		
 	    JButton cancelButton = new JButton("Cancel");
 	    cancelButton.setMnemonic(KeyEvent.VK_N);
@@ -208,6 +277,7 @@ public class ImageLabeller extends JFrame{
 			@Override
 			public void actionPerformed(ActionEvent e) {
 			    	System.out.println("cancel file load");
+			    	loadFrame.dispose();
 			}
 		});
 		cancelButton.setToolTipText("Click to cancel load");
@@ -218,7 +288,7 @@ public class ImageLabeller extends JFrame{
 	    scrollpane.getViewport().add(tree);
 	    loadFrame.add(BorderLayout.NORTH, scrollpane);
 	    
-	    //add the butons for load and cancel to the panel
+	    //add the buttons for load and cancel to the panel
 	    loadFrame.add(BorderLayout.EAST, loadButton);
 	    loadFrame.add(BorderLayout.WEST, cancelButton);
 		
@@ -226,20 +296,23 @@ public class ImageLabeller extends JFrame{
 	    loadFrame.pack();
 		loadFrame.setVisible(true);
 		
-		
-		// need to reload GUI with new fileName
-		//could have a while loop thats waits for the user to select a file when selected close FileTree and set CurrentFile to correct file
 	}
 	
 	public void reLoad(String file) throws Exception
 	{
 		
-		getPolygons(this.window);
-		//imagePanel = new ImagePanel("/afs/inf.ed.ac.uk/user/s09/s0930584/workspace/HCI/src/images/" + file, polygonsList, polygonNames);
-		//imagePanel.setOpaque(true); //content panes must be opaque
+		//needs to load the polygon names and such from file.
+		System.out.println("gettingPolys");
+		window.getPolygons();
 		
-		//window.validate();
-		//window.repaint();
+		imagePanel.currentPolygon = currentPolygon;
+		imagePanel.polygonNames = polygonNames;
+		imagePanel.polygonsList = polygonsList;
+		
+		
+		window.loadGUI("src/images/" + currentFile);
+		window.validate();
+		window.repaint();
 		
 	}
 	
@@ -317,7 +390,9 @@ public class ImageLabeller extends JFrame{
 		  			
 		  			out.println("#");
 		  			int polyIndex = 0;
-		  			out.println(polygonNames.get(polyIndex));
+		  			if(polygonNames.size()!=0){
+		  				out.println(polygonNames.get(polyIndex));
+		  			}
 		  			boolean firstRun = true;
 		  			
 		  			for (ArrayList<Point> arrayCounter: polygonsList){
@@ -396,24 +471,10 @@ public class ImageLabeller extends JFrame{
 		newPolyButton.setToolTipText("click to load objects");
 		
 		
-		JButton checkButton = new JButton("check File");
-		checkButton.setMnemonic(KeyEvent.VK_N);
-		checkButton.setSize(50, 20);
-		checkButton.setEnabled(true);
-		checkButton.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e ) {
-				System.out.println("the file is set to : " + currentFile);
-				System.out.println("the Out file is: " + currentFileOut);
-			}
-		});
-		
-		
 		displayList(polygonNames);
 		
 		toolboxPanel.add(newPolyButton);
 		toolboxPanel.add(loadButton);
-		toolboxPanel.add(checkButton);
 		toolboxPanel.add(listScroller);
 
 		//add toolbox to window
@@ -424,6 +485,148 @@ public class ImageLabeller extends JFrame{
         this.setVisible(true);
 	}
 
+	
+	
+	public void loadGUI(final String imageFilename) throws Exception {
+		this.addWindowListener(new WindowAdapter() {
+		  	public void windowClosing(WindowEvent event) {
+				imagePanel.setOpaque(true); //content panes must be opaque
+		  		
+		  		int confirmExit=0;
+		  		boolean save = false;
+		  		//Choose which confirmation message to display
+		  		if((imagePanel.currentPolygon).isEmpty()){
+		  		String exitMessage = "Are you sure you want to exit?";
+		  		confirmExit = JOptionPane.showConfirmDialog(new JFrame(), exitMessage, "Confirm Exit",JOptionPane.YES_NO_OPTION);
+		  		}else{
+		  			String exitMessage = "Do you want to save the current object before exiting?";
+			  	confirmExit = JOptionPane.showConfirmDialog(new JFrame(), exitMessage, "Confirm Exit",JOptionPane.YES_NO_CANCEL_OPTION);	
+		  		save = true;
+		  		}
+		  		if (((confirmExit < 2) && (save))||((!save) && (confirmExit == 0))){
+		  			if(save && confirmExit ==0){
+		  				imagePanel.addNewPolygon("new unlabeled Polygon");
+		  			}
+		  			//write the objects to a file
+		  			
+		  			File f = new File(currentFileOut + ".txt");
+		  			if(!f.exists())
+		  			{
+		  				try {
+							f.createNewFile();
+						} catch (IOException e) {
+							e.printStackTrace();
+						}
+		  				System.out.println("New file \" " + currentFileOut + ".txt\" has been created to the current directory");
+		  			}
+		  			
+		  			
+		  			FileWriter filey = null;
+					try {
+						filey = new FileWriter( currentFileOut + ".txt");
+					} catch (IOException e1) {
+						e1.printStackTrace();
+					}
+					
+					PrintWriter out = new PrintWriter(filey);
+		  			polygonsList = imagePanel.returnPolygons();
+		  			polygonNames = imagePanel.returnPolyNames();
+		  			
+		  			out.println("#");
+		  			int polyIndex = 0;
+		  			if(polygonNames.size()!=0){
+		  				out.println(polygonNames.get(polyIndex));
+		  			}
+		  			boolean firstRun = true;
+		  			
+		  			for (ArrayList<Point> arrayCounter: polygonsList){
+		  				if(firstRun){
+		  					System.out.println("in the first run");
+		  				}
+		  				for(Point pointCounter: arrayCounter){
+		  						out.println(new Integer(pointCounter.getX()).toString());
+		  						out.println(new Integer(pointCounter.getY()).toString());
+		  				}
+		  				if(firstRun){
+		  					System.out.println("finished printing the First points");
+		  				}
+		  				
+		  				if(!firstRun){
+		  					out.println("#");
+		  					polyIndex++;
+		  					if(polygonNames.size() > polyIndex)
+		  					{
+		  						out.println(polygonNames.get(polyIndex));
+		  					}
+		  				}
+		  				firstRun = false;
+		  			}
+				out.close();
+
+				//Close the program
+		  		System.out.println("Bye bye!");
+		  		System.exit(0);
+		  		}else{
+		  		//User has cancelled the exit.
+		  		System.out.println("Exit aborted.");
+		  		}
+
+		  	}
+		});
+
+		//setup main window panel
+		appPanel = new JPanel();
+		this.setContentPane(appPanel);
+
+        //Create and set up the image panel.
+		imagePanel = new ImagePanel(imageFilename, polygonsList, polygonNames);
+		imagePanel.setOpaque(true); //content panes must be opaque
+
+        appPanel.add(imagePanel);
+
+        //create toolbox panel
+        toolboxPanel = new JPanel();
+        
+        //Add button
+		JButton newPolyButton = new JButton("Save Object");
+		newPolyButton.setMnemonic(KeyEvent.VK_N);
+		newPolyButton.setSize(50, 20);
+		newPolyButton.setEnabled(true);
+		newPolyButton.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+			    	addNewPolygon();
+			}
+		});
+		newPolyButton.setToolTipText("Click to save outlined object");
+		
+		//add a button to load a picture
+		JButton loadButton = new JButton("Load a Picture");
+		loadButton.setMnemonic(KeyEvent.VK_N);
+		loadButton.setSize(50, 20);
+		loadButton.setEnabled(true);
+		loadButton.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				load(new File("../HCI/src/images"));
+			}
+		});
+		newPolyButton.setToolTipText("click to load objects");
+		
+		
+		displayList(polygonNames);
+		
+		toolboxPanel.add(newPolyButton);
+		toolboxPanel.add(loadButton);
+		toolboxPanel.add(listScroller);
+
+		//add toolbox to window
+		appPanel.add(toolboxPanel);
+
+		//display all the stuff
+		this.pack();
+        this.setVisible(true);
+	}
 	
 
 	int readLines() throws IOException{
@@ -441,13 +644,8 @@ public class ImageLabeller extends JFrame{
 	}
 
 
-	public void getPolygons(ImageLabeller window) throws IOException{
+	public void getPolygons() throws IOException{
 		//This method reads the defined objects from the file
-		int numberLines = window.readLines();
-		//Is file empty?
-		if(numberLines==0){
-			return;
-		}
 		
 		File f = new File(currentFileOut + ".txt");
 		if(!f.exists())
@@ -456,10 +654,29 @@ public class ImageLabeller extends JFrame{
 			System.out.println("New file \" " + currentFileOut + ".txt\" has been created to the current directory");
 		}
 		
+		
+		
 		FileReader inFile = new FileReader(currentFileOut + ".txt");
 		
-		BufferedReader in = new BufferedReader(inFile);
+		BufferedReader reader = new BufferedReader(inFile);
+		int numberLines = 0;
+		while(reader.readLine()!=null)
+		{
+			numberLines++;
+		}
+		
+		reader.close();
 		int currentLine = 0;
+		
+		inFile = new FileReader(currentFileOut + ".txt");
+		BufferedReader in = new BufferedReader(inFile);
+		
+		System.out.println("no of lines= " + numberLines);
+		
+		if(numberLines==0)
+		{
+			return;
+		}
 		
 		while(true){
 		String xcoord = in.readLine();
@@ -506,11 +723,12 @@ public class ImageLabeller extends JFrame{
 	public static void main(String argv[]) throws IOException{
 		try {
 			//create a window and display the image
-			window.getPolygons(window);
+			window.getPolygons();
 			//Let the user confirm the app closing.
 			window.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
 			window.setTitle("Image Labeler");
 			window.setupGUI("src/images/U1003_0000.jpg");
+			window.setSize(800,750);
 		} catch (Exception e) {
 			System.err.println("Image: " + "src/images/U1003_0000.jpg");
 			e.printStackTrace();
