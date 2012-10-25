@@ -441,11 +441,28 @@ public class ImageLabeller extends JFrame{
 		});
 		newPolyButton.setToolTipText("click to load objects");
 		
+		JButton deleteButton = new JButton("Delete object");
+		deleteButton.setMnemonic(KeyEvent.VK_N);
+		deleteButton.setSize(50, 20);
+		deleteButton.setEnabled(true);
+		deleteButton.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				int index = nameList.getSelectedIndex();
+				System.out.println(imagePanel.polygonsList.size());
+				imagePanel.polygonsList.remove(index);
+				imagePanel.polygonNames.remove(index);
+				System.out.println(imagePanel.polygonsList.size());
+			}
+		});
+		newPolyButton.setToolTipText("click to delete objects");
+		
 		
 		displayList(polygonNames);
 		
 		toolboxPanel.add(newPolyButton);
 		toolboxPanel.add(loadButton);
+		toolboxPanel.add(deleteButton);
 		toolboxPanel.add(listScroller);
 
 		//add toolbox to window
