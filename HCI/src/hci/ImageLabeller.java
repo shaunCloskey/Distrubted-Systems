@@ -94,8 +94,6 @@ public class ImageLabeller extends JFrame{
 	 */
 	JScrollPane listScroller;
 	
-	FileTree fileTree = new FileTree(new File("../HCI/src/images"));
-	
 	String currentFile = "U1003_0000.jpg";
 	
 	String currentFileOut ="U1003_0000";
