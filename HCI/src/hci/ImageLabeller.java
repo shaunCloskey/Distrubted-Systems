@@ -104,13 +104,18 @@ public class ImageLabeller extends JFrame{
 	
 	/**
 	 * handles New Object button action
+	 * @throws Exception 
 	 */
-	public void addNewPolygon() {
+	public void addNewPolygon() throws Exception {
 		String name = JOptionPane.showInputDialog("name the polygon");
 		imagePanel.addNewPolygon(name);
-		displayList(imagePanel.polygonNames);
-		appPanel.revalidate();
-		appPanel.repaint();
+    	
+    	saveFile();
+		
+		window.setupGUI("src/images/" + currentFile);
+		window.setSize(800,750);
+		window.validate();
+		window.repaint();
 		
 	}
 	
@@ -423,7 +428,12 @@ public class ImageLabeller extends JFrame{
 		newPolyButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-			    	addNewPolygon();
+			    	try {
+						addNewPolygon();
+					} catch (Exception e1) {
+						// TODO Auto-generated catch block
+						e1.printStackTrace();
+					}
 			}
 		});
 		newPolyButton.setToolTipText("Click to save outlined object");
@@ -453,6 +463,19 @@ public class ImageLabeller extends JFrame{
 				imagePanel.polygonsList.remove(index);
 				imagePanel.polygonNames.remove(index);
 				System.out.println(imagePanel.polygonsList.size());
+				
+				
+				saveFile();
+				
+				try {
+					window.loadGUI("src/images/" + currentFile);
+				} catch (Exception e1) {
+					e1.printStackTrace();
+				}
+				window.setSize(800,750);
+				window.validate();
+				window.repaint();
+				
 			}
 		});
 		newPolyButton.setToolTipText("click to delete objects");
@@ -583,7 +606,12 @@ public class ImageLabeller extends JFrame{
 		newPolyButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-			    	addNewPolygon();
+			    	try {
+						addNewPolygon();
+					} catch (Exception e1) {
+						// TODO Auto-generated catch block
+						e1.printStackTrace();
+					}
 			}
 		});
 		newPolyButton.setToolTipText("Click to save outlined object");
@@ -601,11 +629,40 @@ public class ImageLabeller extends JFrame{
 		});
 		newPolyButton.setToolTipText("click to load objects");
 		
+		JButton deleteButton = new JButton("Delete object");
+		deleteButton.setMnemonic(KeyEvent.VK_N);
+		deleteButton.setSize(50, 20);
+		deleteButton.setEnabled(true);
+		deleteButton.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				int index = nameList.getSelectedIndex();
+				System.out.println(imagePanel.polygonsList.size());
+				imagePanel.polygonsList.remove(index);
+				imagePanel.polygonNames.remove(index);
+				System.out.println(imagePanel.polygonsList.size());
+				
+				
+				saveFile();
+				
+				try {
+					window.loadGUI("src/images/" + currentFile);
+				} catch (Exception e1) {
+					e1.printStackTrace();
+				}
+				window.setSize(800,750);
+				window.validate();
+				window.repaint();
+				
+			}
+		});
+		newPolyButton.setToolTipText("click to delete objects");
 		
 		displayList(polygonNames);
 		
 		toolboxPanel.add(newPolyButton);
 		toolboxPanel.add(loadButton);
+		toolboxPanel.add(deleteButton);
 		toolboxPanel.add(listScroller);
 
 		//add toolbox to window
