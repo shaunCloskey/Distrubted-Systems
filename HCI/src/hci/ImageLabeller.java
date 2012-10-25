@@ -72,6 +72,7 @@ public class ImageLabeller extends JFrame{
 	 * main window panel
 	 */
 	JPanel appPanel = null;
+	static boolean hello = true;
 
 	/**
 	 * tool box - put all buttons and stuff here!
@@ -299,7 +300,7 @@ public class ImageLabeller extends JFrame{
 		imagePanel.polygonsList = polygonsList;
 		
 		
-		window.loadGUI("src/images/" + currentFile);
+		window.setupGUI("src/images/" + currentFile);
 		window.setSize(800,750);
 		window.validate();
 		window.repaint();
@@ -408,8 +409,11 @@ public class ImageLabeller extends JFrame{
 
 		//setup main window panel
 		appPanel = new JPanel();
+		if(hello){
 		this.setLayout(new BoxLayout(appPanel, BoxLayout.X_AXIS));
+		}
 		this.setContentPane(appPanel);
+
 
         //Create and set up the image panel.
 		imagePanel = new ImagePanel(imageFilename, polygonsList, polygonNames);
@@ -468,7 +472,7 @@ public class ImageLabeller extends JFrame{
 				saveFile();
 				
 				try {
-					window.loadGUI("src/images/" + currentFile);
+					window.setupGUI("src/images/" + currentFile);
 				} catch (Exception e1) {
 					e1.printStackTrace();
 				}
@@ -495,184 +499,6 @@ public class ImageLabeller extends JFrame{
 		this.pack();
         this.setVisible(true);
 	}
-
-	
-	
-	public void loadGUI(final String imageFilename) throws Exception {
-		this.addWindowListener(new WindowAdapter() {
-		  	public void windowClosing(WindowEvent event) {
-				imagePanel.setOpaque(true); //content panes must be opaque
-		  		
-		  		int confirmExit=0;
-		  		boolean save = false;
-		  		//Choose which confirmation message to display
-		  		if((imagePanel.currentPolygon).isEmpty()){
-		  		String exitMessage = "Are you sure you want to exit?";
-		  		confirmExit = JOptionPane.showConfirmDialog(new JFrame(), exitMessage, "Confirm Exit",JOptionPane.YES_NO_OPTION);
-		  		}else{
-		  			String exitMessage = "Do you want to save the current object before exiting?";
-			  	confirmExit = JOptionPane.showConfirmDialog(new JFrame(), exitMessage, "Confirm Exit",JOptionPane.YES_NO_CANCEL_OPTION);	
-		  		save = true;
-		  		}
-		  		if (((confirmExit < 2) && (save))||((!save) && (confirmExit == 0))){
-		  			if(save && confirmExit ==0){
-		  				imagePanel.addNewPolygon("new unlabeled Polygon");
-		  			}
-		  			//write the objects to a file
-		  			
-		  			File f = new File(currentFileOut + ".txt");
-		  			if(!f.exists())
-		  			{
-		  				try {
-							f.createNewFile();
-						} catch (IOException e) {
-							e.printStackTrace();
-						}
-		  				System.out.println("New file \" " + currentFileOut + ".txt\" has been created to the current directory");
-		  			}
-		  			
-		  			
-		  			FileWriter filey = null;
-					try {
-						filey = new FileWriter( currentFileOut + ".txt");
-					} catch (IOException e1) {
-						e1.printStackTrace();
-					}
-					
-					PrintWriter out = new PrintWriter(filey);
-		  			polygonsList = imagePanel.returnPolygons();
-		  			polygonNames = imagePanel.returnPolyNames();
-		  			
-		  			out.println("#");
-		  			int polyIndex = 0;
-		  			if(polygonNames.size()!=0){
-		  				out.println(polygonNames.get(polyIndex));
-		  			}
-		  			boolean firstRun = true;
-		  			
-		  			for (ArrayList<Point> arrayCounter: polygonsList){
-		  				if(firstRun){
-		  					System.out.println("in the first run");
-		  				}
-		  				for(Point pointCounter: arrayCounter){
-		  						out.println(new Integer(pointCounter.getX()).toString());
-		  						out.println(new Integer(pointCounter.getY()).toString());
-		  				}
-		  				if(firstRun){
-		  					System.out.println("finished printing the First points");
-		  				}
-		  				
-		  				if(!firstRun){
-		  					out.println("#");
-		  					polyIndex++;
-		  					if(polygonNames.size() > polyIndex)
-		  					{
-		  						out.println(polygonNames.get(polyIndex));
-		  					}
-		  				}
-		  				firstRun = false;
-		  			}
-				out.close();
-
-				//Close the program
-		  		System.out.println("Bye bye!");
-		  		System.exit(0);
-		  		}else{
-		  		//User has cancelled the exit.
-		  		System.out.println("Exit aborted.");
-		  		}
-
-		  	}
-		});
-
-		//setup main window panel
-		appPanel = new JPanel();
-		this.setContentPane(appPanel);
-
-        //Create and set up the image panel.
-		imagePanel = new ImagePanel(imageFilename, polygonsList, polygonNames);
-		imagePanel.setOpaque(true); //content panes must be opaque
-
-        appPanel.add(imagePanel);
-
-        //create toolbox panel
-        toolboxPanel = new JPanel();
-        
-        //Add button
-		JButton newPolyButton = new JButton("Save Object");
-		newPolyButton.setMnemonic(KeyEvent.VK_N);
-		newPolyButton.setSize(50, 20);
-		newPolyButton.setEnabled(true);
-		newPolyButton.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-			    	try {
-						addNewPolygon();
-					} catch (Exception e1) {
-						// TODO Auto-generated catch block
-						e1.printStackTrace();
-					}
-			}
-		});
-		newPolyButton.setToolTipText("Click to save outlined object");
-		
-		//add a button to load a picture
-		JButton loadButton = new JButton("Load a Picture");
-		loadButton.setMnemonic(KeyEvent.VK_N);
-		loadButton.setSize(50, 20);
-		loadButton.setEnabled(true);
-		loadButton.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				load(new File("../HCI/src/images"));
-			}
-		});
-		newPolyButton.setToolTipText("click to load objects");
-		
-		JButton deleteButton = new JButton("Delete object");
-		deleteButton.setMnemonic(KeyEvent.VK_N);
-		deleteButton.setSize(50, 20);
-		deleteButton.setEnabled(true);
-		deleteButton.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				int index = nameList.getSelectedIndex();
-				System.out.println(imagePanel.polygonsList.size());
-				imagePanel.polygonsList.remove(index);
-				imagePanel.polygonNames.remove(index);
-				System.out.println(imagePanel.polygonsList.size());
-				
-				
-				saveFile();
-				
-				try {
-					window.loadGUI("src/images/" + currentFile);
-				} catch (Exception e1) {
-					e1.printStackTrace();
-				}
-				window.setSize(800,750);
-				window.validate();
-				window.repaint();
-				
-			}
-		});
-		newPolyButton.setToolTipText("click to delete objects");
-		
-		displayList(polygonNames);
-		
-		toolboxPanel.add(newPolyButton);
-		toolboxPanel.add(loadButton);
-		toolboxPanel.add(deleteButton);
-		toolboxPanel.add(listScroller);
-
-		//add toolbox to window
-		appPanel.add(toolboxPanel);
-
-		//display all the stuff
-		this.pack();
-        this.setVisible(true);
-	}
-	
 
 	int readLines() throws IOException{
 		//Just finds out how many lines are in the text file
@@ -779,6 +605,7 @@ public class ImageLabeller extends JFrame{
 			window.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
 			window.setTitle("Image Labeler");
 			window.setupGUI("src/images/U1003_0000.jpg");
+			hello = false;
 			window.setSize(800,750);
 		} catch (Exception e) {
 			System.err.println("Image: " + "src/images/U1003_0000.jpg");
