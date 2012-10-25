@@ -311,6 +311,7 @@ public class ImageLabeller extends JFrame{
 		
 		
 		window.loadGUI("src/images/" + currentFile);
+		window.setSize(800,750);
 		window.validate();
 		window.repaint();
 		
