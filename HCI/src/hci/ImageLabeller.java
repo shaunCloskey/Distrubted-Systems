@@ -176,40 +176,24 @@ public class ImageLabeller extends JFrame{
 				} catch (IOException e1) {
 					e1.printStackTrace();
 				}
-				
-				PrintWriter out = new PrintWriter(filey);
+	  			
+	  			PrintWriter out = new PrintWriter(filey);
 	  			polygonsList = imagePanel.returnPolygons();
 	  			polygonNames = imagePanel.returnPolyNames();
 	  			
 	  			out.println("#");
 	  			int polyIndex = 0;
-	  			if(polygonNames.size()!=0){
-	  				out.println(polygonNames.get(polyIndex));
-	  			}
-	  			boolean firstRun = true;
 	  			
 	  			for (ArrayList<Point> arrayCounter: polygonsList){
-	  				if(firstRun){
-	  					System.out.println("in the first run");
-	  				}
+	  				out.println(polygonNames.get(polyIndex));
 	  				for(Point pointCounter: arrayCounter){
 	  						out.println(new Integer(pointCounter.getX()).toString());
 	  						out.println(new Integer(pointCounter.getY()).toString());
 	  				}
-	  				if(firstRun){
-	  					System.out.println("finished printing the First points");
-	  				}
-	  				
-	  				if(!firstRun){
-	  					out.println("#");
-	  					polyIndex++;
-	  					if(polygonNames.size() > polyIndex)
-	  					{
-	  						out.println(polygonNames.get(polyIndex));
-	  					}
-	  				}
-	  				firstRun = false;
+	  				out.println("#");
+	  				polyIndex++;
 	  			}
+	  		polyIndex =0;
 			out.close();
 	}
 	
@@ -391,32 +375,18 @@ public class ImageLabeller extends JFrame{
 		  			
 		  			out.println("#");
 		  			int polyIndex = 0;
-		  			if(polygonNames.size()!=0){
-		  				out.println(polygonNames.get(polyIndex));
-		  			}
-		  			boolean firstRun = true;
 		  			
 		  			for (ArrayList<Point> arrayCounter: polygonsList){
-		  				if(firstRun){
-		  					System.out.println("in the first run");
+		  				if(polyIndex !=polygonNames.size())
+		  				{
+		  					out.println(polygonNames.get(polyIndex));
 		  				}
 		  				for(Point pointCounter: arrayCounter){
 		  						out.println(new Integer(pointCounter.getX()).toString());
 		  						out.println(new Integer(pointCounter.getY()).toString());
 		  				}
-		  				if(firstRun){
-		  					System.out.println("finished printing the First points");
-		  				}
-		  				
-		  				if(!firstRun){
-		  					out.println("#");
-		  					polyIndex++;
-		  					if(polygonNames.size() > polyIndex)
-		  					{
-		  						out.println(polygonNames.get(polyIndex));
-		  					}
-		  				}
-		  				firstRun = false;
+		  				out.println("#");
+		  				polyIndex++;
 		  			}
 				out.close();
 
@@ -679,6 +649,8 @@ public class ImageLabeller extends JFrame{
 			return;
 		}
 		
+		boolean firstPoly = true;
+		
 		while(true){
 		String xcoord = in.readLine();
 		System.out.println(xcoord);
@@ -686,9 +658,12 @@ public class ImageLabeller extends JFrame{
 		//end of object
 		if(xcoord.equals("#")){
 			System.out.println("Object read.");
-			polygonsList.add(currentPolygon);
+			if(!firstPoly){
+				polygonsList.add(currentPolygon);
+			}
 			currentPolygon = new ArrayList<Point>();
 			//end of file
+			
 			if(currentLine == numberLines){
 				in.close();
 				return;
@@ -698,18 +673,19 @@ public class ImageLabeller extends JFrame{
 			System.out.println("object name : " + xcoord);
 			polygonNames.add(xcoord);
 			currentLine++;
+			firstPoly = false;
 			
 			
 			
 		//y coord comes next
 		}else{
-		String ycoord = in.readLine();
-		currentLine++;
-		Point tempPoint = new Point();
-		tempPoint.setX(Integer.parseInt(xcoord));
-		tempPoint.setY(Integer.parseInt(ycoord));
-		//add these points to the current object
-		currentPolygon.add(tempPoint);
+			String ycoord = in.readLine();
+			currentLine++;
+			Point tempPoint = new Point();
+			tempPoint.setX(Integer.parseInt(xcoord));
+			tempPoint.setY(Integer.parseInt(ycoord));
+			//add these points to the current object
+			currentPolygon.add(tempPoint);
 		}
 		
 		}
