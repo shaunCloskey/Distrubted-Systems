@@ -11,6 +11,8 @@ import javax.swing.JScrollPane;
 import javax.swing.JTree;
 import javax.swing.ListSelectionModel;
 import javax.swing.WindowConstants;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
 import javax.swing.tree.DefaultMutableTreeNode;
@@ -77,8 +79,10 @@ public class ImageLabeller extends JFrame{
 	 */
 	JPanel appPanel = null;
 	static boolean hello = true;
-
+	boolean blue = false;
+	int blueIndex;
 	/**
+	 *
 	 * tool box - put all buttons and stuff here!
 	 */
 	JPanel toolboxPanel = null;
@@ -114,10 +118,14 @@ public class ImageLabeller extends JFrame{
 	public void addNewPolygon() throws Exception {
 		
 		String name = JOptionPane.showInputDialog("Name the polygon");
-		if(name.isEmpty()){
-			JOptionPane.showMessageDialog(null, "Object must be given a name!");
+		if(name==null){
 			return;
 		}
+		if(name.isEmpty()){
+			JOptionPane.showMessageDialog(null, "Object must be given a name!\nObject not saved.");
+			return;
+		}
+		
 		imagePanel.addNewPolygon(name);
     	
     	saveFile();
@@ -326,6 +334,15 @@ public class ImageLabeller extends JFrame{
 		nameList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		nameList.setLayoutOrientation(JList.VERTICAL);
 		nameList.setVisibleRowCount(-1);
+		nameList.addListSelectionListener(new ListSelectionListener(){
+			public void valueChanged(ListSelectionEvent e){
+					blue = true;
+					blueIndex = nameList.getSelectedIndex();
+					window.setSize(800,750);
+					window.validate();
+					window.repaint();
+			}
+		});
 		listScroller = new JScrollPane(nameList);
 		listScroller.setPreferredSize(new Dimension(150, 80));
 	}
@@ -424,6 +441,7 @@ public class ImageLabeller extends JFrame{
 
         //Create and set up the image panel.
 		imagePanel = new ImagePanel(imageFilename, polygonsList, polygonNames);
+		imagePanel.windowB = window;
 		imagePanel.setOpaque(true); //content panes must be opaque
 
         appPanel.add(imagePanel);
@@ -441,6 +459,7 @@ public class ImageLabeller extends JFrame{
 			public void actionPerformed(ActionEvent e) {
 				if(imagePanel.edit){
 					imagePanel.edit = false;
+					imagePanel.move = false;
 					if(imagePanel.currentPolygon.size()==0){
 					String yDeleteMessage = "No points to save.\nDo you want to delete the object entirely?";
 					int yDelete = JOptionPane.showConfirmDialog(new JFrame(), yDeleteMessage, "Object Error",JOptionPane.YES_NO_OPTION);
@@ -469,21 +488,11 @@ public class ImageLabeller extends JFrame{
 					window.repaint();
 					}
 				}else{
-			    	try {
-			    		
-			    		System.out.println("size of current poly is " + imagePanel.currentPolygon.size());
-						if(imagePanel.currentPolygon.size() <3){
-							int discardPolygon = JOptionPane.showConfirmDialog(new JFrame(), "the polygon has less than 3 polygons it must have at least three to be saved./n do you want to discard the polygon?", "to few points",JOptionPane.YES_NO_OPTION);
-							if (discardPolygon == 0){
-							currentPolygon = new ArrayList<Point>();
-							imagePanel.currentPolygon = new ArrayList<Point>();
-							window.setSize(800,750);
-							window.validate();
-							window.repaint();
-							return;
-						}
+					if(imagePanel.currentPolygon.isEmpty()){
+						JOptionPane.showMessageDialog(null, "No points to save.");
 						return;
-						}
+					}
+			    	try {
 						addNewPolygon();
 					} catch (Exception e1) {
 						e1.printStackTrace();
@@ -494,7 +503,7 @@ public class ImageLabeller extends JFrame{
 		saveButton.setToolTipText("Click to save object");
 		
 		//add a button to load a picture
-		JButton loadButton = new JButton("Load a Picture");
+		JButton loadButton = new JButton("Load a New Picture");
 		loadButton.setMnemonic(KeyEvent.VK_N);
 		loadButton.setSize(50, 20);
 		loadButton.setEnabled(true);
@@ -537,7 +546,6 @@ public class ImageLabeller extends JFrame{
 		  			}
 		  		}
 		  		imagePanel.currentFile = currentFile;
-		  		imagePanel.windowB = window;
 		  		imagePanel.currentPolygon = imagePanel.polygonsList.get(indexEdit);
 		  		imagePanel.edit = true;
 		  		}
@@ -568,9 +576,13 @@ public class ImageLabeller extends JFrame{
 				int choice = JOptionPane.showConfirmDialog(new JFrame(), "Delete currently selected object?", "Confirm Delete",JOptionPane.YES_NO_OPTION);
 				if(choice==0){
 				int index = nameList.getSelectedIndex();
+					if(index==-1){
+						imagePanel.currentPolygon = new ArrayList<Point>();
+					}else{
 				imagePanel.polygonsList.remove(index);
-				imagePanel.polygonNames.remove(index);			
+				imagePanel.polygonNames.remove(index);
 				saveFile();
+					}
 				try {
 					window.setupGUI("src/images/" + currentFile);
 				} catch (Exception e1) {
@@ -714,9 +726,8 @@ public class ImageLabeller extends JFrame{
 			e.printStackTrace();
 		}
 	}
-
+	
 }
-
 
 
 
