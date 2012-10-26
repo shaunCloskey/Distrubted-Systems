@@ -27,17 +27,24 @@ public class ImagePanel extends JPanel implements MouseListener {
 	 * some java stuff to get rid of warnings
 	 */
 	private static final long serialVersionUID = 1L;
+	
 
 	/**
 	 * image to be tagged
 	 */
 	BufferedImage image = null;
 
+	ImageLabeller windowB;
+	boolean move;
+	int indexP;
+	boolean edit = false;
+	String currentFile = ImageLabeller.currentFileOut;
+	
+	int indexEdit;
 	/**
 	 * list of current polygon's vertices 
 	 */
 	ArrayList<Point> currentPolygon = new ArrayList<Point>();
-	
 	/**
 	 * list of all the names given to each of the polygons
 	 */
@@ -146,8 +153,14 @@ public class ImagePanel extends JPanel implements MouseListener {
 			return;
 		}else{
 		for(ArrayList<Point> polygon : polygonsList) {
+			if(edit){
+				if(polygonsList.indexOf(polygon)==indexEdit){
+					drawPolygon(polygon);
+				}
+			}else{
 			drawPolygon(polygon);
 			finishPolygon(polygon);
+			}
 		}
 
 		//display current polygon
@@ -186,7 +199,6 @@ public class ImagePanel extends JPanel implements MouseListener {
 			g.setColor(Color.GREEN);
 			g.drawLine(firstVertex.getX(), firstVertex.getY(), lastVertex.getX(), lastVertex.getY());
 		}else{
-		
 		}
 	}
 
@@ -196,15 +208,11 @@ public class ImagePanel extends JPanel implements MouseListener {
 	public void addNewPolygon(String name) {
 		//finish the current polygon if any
 		if (currentPolygon != null ) {
-			if(currentPolygon.size() >= 3){
 				polygonNames.add(name);
 				finishPolygon(currentPolygon);
 				polygonsList.add(currentPolygon);
-			}else{
-				System.out.print("current poylgon has less than 3 points");
-				JOptionPane.showMessageDialog(null, "current poylgon has less than 3 points");
-				return;
-			}
+		}else{
+			JOptionPane.showMessageDialog(null, "No points to save.");
 		}
 
 		currentPolygon = new ArrayList<Point>();
@@ -212,19 +220,60 @@ public class ImagePanel extends JPanel implements MouseListener {
 
 	@Override
 	public void mouseClicked(MouseEvent e) {
+		
 		int x = e.getX();
 		int y = e.getY();
-
-		//check if the cursor within image area
+		
 		if (x > image.getWidth() || y > image.getHeight()) {
 			//if not do nothing
 			return;
 		}
-
+		
+		if(edit){
+			for(Point pointy: currentPolygon){
+				if(x<(pointy.getX()+8)&&(x>(pointy.getX()-8))&&(y>(pointy.getY()-8))&&(y<(pointy.getY()+8))){
+					indexP =currentPolygon.indexOf(pointy);
+					currentPolygon.remove(indexP);
+					System.out.println("Point1 "+indexP);
+					try {
+						windowB.setSize(800,750);
+						windowB.validate();
+						windowB.repaint();
+					} catch (Exception e1) {
+						// TODO Auto-generated catch block
+						e1.printStackTrace();
+					}
+					move = true;
+					return;
+				}
+			}
+		}
+		
+		for(ArrayList<Point> currenty: polygonsList){
+		for(Point pointy: currenty){
+		if(x<(pointy.getX()+8)&&(x>(pointy.getX()-8))&&(y>(pointy.getY()-8))&&(y<(pointy.getY()+8))){
+			JOptionPane.showMessageDialog(null, "Cannot place a point ontop of another.");
+			return;
+		}
+		}
+		}
+		
 		Graphics2D g = (Graphics2D)this.getGraphics();
 
 		//if the left button than we will add a vertex to poly
 		if (e.getButton() == MouseEvent.BUTTON1) {
+			if(move){
+				move = false;
+				currentPolygon.add(indexP, new Point(x,y));
+				System.out.println("Point2 "+indexP);
+				try {
+					windowB.setSize(800,750);
+					windowB.validate();
+					windowB.repaint();;
+				} catch (Exception e1) {
+				}
+			}
+			else{
 			g.setColor(Color.GREEN);
 			if (currentPolygon.size() != 0) {
 				Point lastVertex = currentPolygon.get(currentPolygon.size() - 1);
@@ -234,7 +283,9 @@ public class ImagePanel extends JPanel implements MouseListener {
 
 			currentPolygon.add(new Point(x,y));
 			System.out.println(x + " " + y);
+			}
 		} 
+		
 	}
 
 	@Override

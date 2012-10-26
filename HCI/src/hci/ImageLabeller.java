@@ -14,14 +14,18 @@ import javax.swing.WindowConstants;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
 import javax.swing.tree.DefaultMutableTreeNode;
-
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
+import java.awt.Graphics2D;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
+import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.BufferedReader;
@@ -67,7 +71,7 @@ public class ImageLabeller extends JFrame{
 
 	static ImageLabeller window = new ImageLabeller();
 	
-	
+	int indexEdit;
 	/**
 	 * main window panel
 	 */
@@ -108,12 +112,16 @@ public class ImageLabeller extends JFrame{
 	 * @throws Exception 
 	 */
 	public void addNewPolygon() throws Exception {
-		String name = JOptionPane.showInputDialog("name the polygon");
+		
+		String name = JOptionPane.showInputDialog("Name the polygon");
+		if(name.isEmpty()){
+			JOptionPane.showMessageDialog(null, "Object must be given a name!");
+			return;
+		}
 		imagePanel.addNewPolygon(name);
     	
     	saveFile();
-		
-		window.setupGUI("src/images/" + currentFile);
+    	window.setupGUI("src/images/" + currentFile);
 		window.setSize(800,750);
 		window.validate();
 		window.repaint();
@@ -249,7 +257,6 @@ public class ImageLabeller extends JFrame{
 					try {
 						reLoad(currentFile);
 					} catch (Exception e1) {
-						// TODO Auto-generated catch block
 						e1.printStackTrace();
 					}
 					
@@ -347,8 +354,8 @@ public class ImageLabeller extends JFrame{
 		  		confirmExit = JOptionPane.showConfirmDialog(new JFrame(), exitMessage, "Confirm Exit",JOptionPane.YES_NO_OPTION);
 		  		}else{
 		  			String exitMessage = "Do you want to save the current object before exiting?";
-			  	confirmExit = JOptionPane.showConfirmDialog(new JFrame(), exitMessage, "Confirm Exit",JOptionPane.YES_NO_CANCEL_OPTION);	
-		  		save = true;
+		  			confirmExit = JOptionPane.showConfirmDialog(new JFrame(), exitMessage, "Confirm Exit",JOptionPane.YES_NO_CANCEL_OPTION);	
+		  			save = true;
 		  		}
 		  		if (((confirmExit < 2) && (save))||((!save) && (confirmExit == 0))){
 		  			if(save && confirmExit ==0){
@@ -400,7 +407,7 @@ public class ImageLabeller extends JFrame{
 		  		System.out.println("Bye bye!");
 		  		System.exit(0);
 		  		}else{
-		  		//User has cancelled the exit.
+		  		//User has canceled the exit.
 		  		System.out.println("Exit aborted.");
 		  		}
 
@@ -425,22 +432,66 @@ public class ImageLabeller extends JFrame{
         toolboxPanel = new JPanel();
         
         //Add button
-		JButton newPolyButton = new JButton("Save Object");
-		newPolyButton.setMnemonic(KeyEvent.VK_N);
-		newPolyButton.setSize(50, 20);
-		newPolyButton.setEnabled(true);
-		newPolyButton.addActionListener(new ActionListener() {
+		JButton saveButton = new JButton("Save Object");
+		saveButton.setMnemonic(KeyEvent.VK_N);
+		saveButton.setSize(50, 20);
+		saveButton.setEnabled(true);
+		saveButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-			    	try {
-						addNewPolygon();
+				if(imagePanel.edit){
+					imagePanel.edit = false;
+					if(imagePanel.currentPolygon.size()==0){
+					String yDeleteMessage = "No points to save.\nDo you want to delete the object entirely?";
+					int yDelete = JOptionPane.showConfirmDialog(new JFrame(), yDeleteMessage, "Object Error",JOptionPane.YES_NO_OPTION);
+					if(yDelete == 0){
+						int index = nameList.getSelectedIndex();
+					imagePanel.polygonsList.remove(index);
+					imagePanel.polygonNames.remove(index);			
+					saveFile();
+					try {
+						window.setupGUI("src/images/" + currentFile);
 					} catch (Exception e1) {
-						// TODO Auto-generated catch block
 						e1.printStackTrace();
 					}
+					window.setSize(800,750);
+					window.validate();
+					window.repaint();
+					return;
+					}else{
+						return;
+					}
+					}else{
+					imagePanel.finishPolygon(currentPolygon);
+					imagePanel.currentPolygon = new ArrayList<Point>();
+					window.setSize(800,750);
+					window.validate();
+					window.repaint();
+					}
+				}else{
+			    	try {
+			    		
+			    		System.out.println("size of current poly is " + imagePanel.currentPolygon.size());
+						if(imagePanel.currentPolygon.size() <3){
+							int discardPolygon = JOptionPane.showConfirmDialog(new JFrame(), "the polygon has less than 3 polygons it must have at least three to be saved./n do you want to discard the polygon?", "to few points",JOptionPane.YES_NO_OPTION);
+							if (discardPolygon == 0){
+							currentPolygon = new ArrayList<Point>();
+							imagePanel.currentPolygon = new ArrayList<Point>();
+							window.setSize(800,750);
+							window.validate();
+							window.repaint();
+							return;
+						}
+						return;
+						}
+						addNewPolygon();
+					} catch (Exception e1) {
+						e1.printStackTrace();
+					}
+				}
 			}
 		});
-		newPolyButton.setToolTipText("Click to save outlined object");
+		saveButton.setToolTipText("Click to save object");
 		
 		//add a button to load a picture
 		JButton loadButton = new JButton("Load a Picture");
@@ -453,7 +504,46 @@ public class ImageLabeller extends JFrame{
 				load(new File("../HCI/src/images"));
 			}
 		});
-		newPolyButton.setToolTipText("click to load objects");
+		loadButton.setToolTipText("click to load objects");
+		
+		//add a button to load a picture
+		JButton editButton = new JButton("Edit object");
+		editButton.setMnemonic(KeyEvent.VK_N);
+		editButton.setSize(50, 20);
+		editButton.setEnabled(true);
+		editButton.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				if(nameList.getSelectedValue() == null){
+					System.out.println("no selected object.");
+				}else{
+				indexEdit = nameList.getSelectedIndex();
+				String renameMessage = "Do you want to rename selected object?";
+		  		int confirmRename = JOptionPane.showConfirmDialog(new JFrame(), renameMessage, "Confirm Exit",JOptionPane.YES_NO_OPTION);
+		  		if(confirmRename==0){
+		  			String newname = JOptionPane.showInputDialog("Please input the new name: ");
+		  			if(newname !=null){
+		  			imagePanel.polygonNames.remove(indexEdit);
+		  			imagePanel.polygonNames.add(indexEdit,newname);
+		  			saveFile();
+					try {
+						window.setupGUI("src/images/" + currentFile);
+					} catch (Exception e1) {
+						e1.printStackTrace();
+					}
+					window.setSize(800,750);
+					window.validate();
+					window.repaint();
+		  			}
+		  		}
+		  		imagePanel.currentFile = currentFile;
+		  		imagePanel.windowB = window;
+		  		imagePanel.currentPolygon = imagePanel.polygonsList.get(indexEdit);
+		  		imagePanel.edit = true;
+		  		}
+			}
+		});
+		editButton.setToolTipText("click to edit objects");
 		
 		JButton deleteButton = new JButton("Delete object");
 		deleteButton.setMnemonic(KeyEvent.VK_N);
@@ -462,15 +552,25 @@ public class ImageLabeller extends JFrame{
 		deleteButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
+				if(imagePanel.polygonsList.isEmpty()){
+					int choice = JOptionPane.showConfirmDialog(new JFrame(), "Delete current object?", "Confirm Delete",JOptionPane.YES_NO_OPTION);
+					if(choice==0){
+						imagePanel.currentPolygon = new ArrayList<Point>();
+						window.setSize(800,750);
+						window.validate();
+						window.repaint();
+					}else{
+						return;
+					}
+				}
+				else{
+					
+				int choice = JOptionPane.showConfirmDialog(new JFrame(), "Delete currently selected object?", "Confirm Delete",JOptionPane.YES_NO_OPTION);
+				if(choice==0){
 				int index = nameList.getSelectedIndex();
-				System.out.println(imagePanel.polygonsList.size());
 				imagePanel.polygonsList.remove(index);
-				imagePanel.polygonNames.remove(index);
-				System.out.println(imagePanel.polygonsList.size());
-				
-				
+				imagePanel.polygonNames.remove(index);			
 				saveFile();
-				
 				try {
 					window.setupGUI("src/images/" + currentFile);
 				} catch (Exception e1) {
@@ -479,16 +579,18 @@ public class ImageLabeller extends JFrame{
 				window.setSize(800,750);
 				window.validate();
 				window.repaint();
-				
+			}
+				}
 			}
 		});
-		newPolyButton.setToolTipText("click to delete objects");
+		deleteButton.setToolTipText("click to delete objects");
 		
 		
 		displayList(polygonNames);
 		
-		toolboxPanel.add(newPolyButton);
+		toolboxPanel.add(saveButton);
 		toolboxPanel.add(loadButton);
+		toolboxPanel.add(editButton);
 		toolboxPanel.add(deleteButton);
 		toolboxPanel.add(listScroller);
 
@@ -612,7 +714,9 @@ public class ImageLabeller extends JFrame{
 			e.printStackTrace();
 		}
 	}
+
 }
+
 
 
 
