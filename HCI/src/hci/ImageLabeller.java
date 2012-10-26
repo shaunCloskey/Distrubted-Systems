@@ -470,20 +470,6 @@ public class ImageLabeller extends JFrame{
 					}
 				}else{
 			    	try {
-			    		
-			    		System.out.println("size of current poly is " + imagePanel.currentPolygon.size());
-						if(imagePanel.currentPolygon.size() <3){
-							int discardPolygon = JOptionPane.showConfirmDialog(new JFrame(), "the polygon has less than 3 polygons it must have at least three to be saved./n do you want to discard the polygon?", "to few points",JOptionPane.YES_NO_OPTION);
-							if (discardPolygon == 0){
-							currentPolygon = new ArrayList<Point>();
-							imagePanel.currentPolygon = new ArrayList<Point>();
-							window.setSize(800,750);
-							window.validate();
-							window.repaint();
-							return;
-						}
-						return;
-						}
 						addNewPolygon();
 					} catch (Exception e1) {
 						e1.printStackTrace();
