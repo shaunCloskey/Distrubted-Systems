@@ -572,10 +572,9 @@ public class ImageLabeller extends JFrame{
 					}
 				}
 				else{
-					
+				int index = nameList.getSelectedIndex();
 				int choice = JOptionPane.showConfirmDialog(new JFrame(), "Delete currently selected object?", "Confirm Delete",JOptionPane.YES_NO_OPTION);
 				if(choice==0){
-				int index = nameList.getSelectedIndex();
 					if(index==-1){
 						imagePanel.currentPolygon = new ArrayList<Point>();
 					}else{
@@ -594,6 +593,7 @@ public class ImageLabeller extends JFrame{
 			}
 				}
 			}
+			
 		});
 		deleteButton.setToolTipText("click to delete objects");
 		
