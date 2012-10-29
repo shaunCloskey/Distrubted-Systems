@@ -38,6 +38,8 @@ public class ImagePanel extends JPanel implements MouseListener {
 	boolean move;
 	int indexP;
 	boolean edit = false;
+	boolean blue;
+	
 	String currentFile = ImageLabeller.currentFileOut;
 	
 	int indexEdit;
@@ -153,12 +155,14 @@ public class ImagePanel extends JPanel implements MouseListener {
 			return;
 		}else{
 		for(ArrayList<Point> polygon : polygonsList) {
-			if(edit){
-				if(polygonsList.indexOf(polygon)==indexEdit){
-					drawPolygon(polygon);
-				}
+			if(windowB.blue && windowB.blueIndex==polygonsList.indexOf(polygon)){
+				blue = true;
 			}else{
+				blue = false;
+			}
 			drawPolygon(polygon);
+			drawPolygon(polygon);
+			if(!edit){
 			finishPolygon(polygon);
 			}
 		}
@@ -174,12 +178,22 @@ public class ImagePanel extends JPanel implements MouseListener {
 	 */
 	public void drawPolygon(ArrayList<Point> polygon) {
 		Graphics2D g = (Graphics2D)this.getGraphics();
-		g.setColor(Color.GREEN);
 		for(int i = 0; i < polygon.size(); i++) {
+			if(blue){
+				g.setColor(Color.BLUE);
+			}else{
+				g.setColor(Color.GREEN);
+			}
 			Point currentVertex = polygon.get(i);
 			if (i != 0) {
 				Point prevVertex = polygon.get(i - 1);
 				g.drawLine(prevVertex.getX(), prevVertex.getY(), currentVertex.getX(), currentVertex.getY());
+			}
+			if((i==polygon.size()-1)&&blue){
+				g.setColor(Color.RED);
+				} 
+			if((i==0) && blue){
+				g.setColor(Color.WHITE);
 			}
 			g.fillOval(currentVertex.getX() - 5, currentVertex.getY() - 5, 10, 10);
 		}
@@ -196,7 +210,11 @@ public class ImagePanel extends JPanel implements MouseListener {
 			Point lastVertex = polygon.get(polygon.size() - 1);
 
 			Graphics2D g = (Graphics2D)this.getGraphics();
+			if(blue){
+				g.setColor(Color.BLUE);
+			}else{
 			g.setColor(Color.GREEN);
+			}
 			g.drawLine(firstVertex.getX(), firstVertex.getY(), lastVertex.getX(), lastVertex.getY());
 		}else{
 		}
@@ -214,7 +232,6 @@ public class ImagePanel extends JPanel implements MouseListener {
 		}else{
 			JOptionPane.showMessageDialog(null, "No points to save.");
 		}
-
 		currentPolygon = new ArrayList<Point>();
 	}
 
@@ -224,8 +241,8 @@ public class ImagePanel extends JPanel implements MouseListener {
 		int x = e.getX();
 		int y = e.getY();
 		
-		if (x > image.getWidth() || y > image.getHeight()) {
-			//if not do nothing
+		if (x > image.getWidth() || y > image.getHeight() ) {
+			System.out.println("huh?");
 			return;
 		}
 		
@@ -265,7 +282,6 @@ public class ImagePanel extends JPanel implements MouseListener {
 			if(move){
 				move = false;
 				currentPolygon.add(indexP, new Point(x,y));
-				System.out.println("Point2 "+indexP);
 				try {
 					windowB.setSize(800,750);
 					windowB.validate();
@@ -274,7 +290,12 @@ public class ImagePanel extends JPanel implements MouseListener {
 				}
 			}
 			else{
+			if(edit){
+			g.setColor(Color.BLUE);
+			}else{
 			g.setColor(Color.GREEN);
+			}
+			
 			if (currentPolygon.size() != 0) {
 				Point lastVertex = currentPolygon.get(currentPolygon.size() - 1);
 				g.drawLine(lastVertex.getX(), lastVertex.getY(), x, y);
