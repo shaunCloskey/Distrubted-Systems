@@ -1,9 +1,12 @@
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 
-public class RoutingInfoProt {
+public class RoutingInfoProt { 
 	
 //pusedo code	
 /*	when a table is received by process p1 from process p2:
@@ -20,6 +23,62 @@ public class RoutingInfoProt {
 		if process p1 has updated its table in any way:
 		send updated table to all links */
 	
+	
+	/*
+	 * need an object for each process that will handle the control of a specific process, spcafically sending of its tables and handling of the receive events
+	 * 
+	 */
+	
+	Map<String, Map< String, Values >> hash_maps = new HashMap<String, Map<String, Values>>();
+	
+	
+	private void send(String process_name, Input input) {
+		// TODO Auto-generated method stub
+		
+		//allLinks is the list of all links from sending process to any other link
+		ArrayList<String> allLinks = new ArrayList<String>();
+		
+		for(InputLink inputLinks: input.input_links){
+			if(inputLinks.left_name.equals(process_name)){
+				//might not need this
+				allLinks.add(inputLinks.right_name);
+			}else{
+				if(inputLinks.right_name.equals(process_name)){
+					//might not need this
+					allLinks.add(inputLinks.left_name);
+					
+				}
+			}
+		}
+		
+		for(String processToSend : allLinks){
+			
+		}
+		
+	}
+	
+	
+	private void setupTable(Input input) {
+		// TODO Auto-generated method stub
+		for(InputNode inputNode: input.input_nodes){
+			//create a hash table to enter to hash_maps
+			//hash tables contains a hashmap for each process
+		}
+		for(InputLink inputLink: input.input_links){
+			//add the link entry to the correct map
+			//give it the correct info for its own links
+		}
+	}
+	
+	public void main () {
+		Input input = new Input();
+		
+		setupTable(input);
+		
+		for(InputCommand inputCommand : input.input_commands ){
+			send(inputCommand.process_name, input);
+		}
+	}
 	
 }
 
@@ -65,14 +124,26 @@ class Input {
 		int [] c = {3};
 		int [] d = {4,5};
 		input_nodes.add(new InputNode("p1", a));
-		input_nodes.add(new InputNode("p1", b));
-		input_nodes.add(new InputNode("p1", c));
-		input_nodes.add(new InputNode("p1", d));
+		input_nodes.add(new InputNode("p2", b));
+		input_nodes.add(new InputNode("p3", c));
+		input_nodes.add(new InputNode("p4", d));
 		input_links.add(new InputLink("p1", "p2"));
-		input_links.add(new InputLink("p1", "p2"));
-		input_links.add(new InputLink("p1", "p2"));
-		input_links.add(new InputLink("p1", "p2"));
+		input_links.add(new InputLink("p1", "p4"));
+		input_links.add(new InputLink("p2", "p3"));
+		input_links.add(new InputLink("p3", "p4"));
 		input_commands.add(new InputCommand("send", "p1"));
+	}
+}
+
+class Values{
+	int address;
+	String link;
+	int cost;
+	
+	public Values(int n_address, String n_link, int n_cost){
+		this.address = n_address;
+		this.cost = n_cost;
+		this.link = n_link;
 	}
 }
 
