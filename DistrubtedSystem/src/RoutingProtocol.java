@@ -9,27 +9,28 @@ import java.util.Stack;
 
 import javax.swing.text.html.HTMLDocument.Iterator;
 
+public class RoutingProtocol {
 
-public class RoutingInfoProt { 	
 	
+
 	/*
 	 * need an object for each process that will handle the control of a specific process, specifically sending of its tables and handling of the receive events
 	 */
 	
-	String send = "send";
-	String receive = "receive";
+	static String send = "send";
+	static String receive = "receive";
 	
 	//map of all tables key is the string of there process_name
 	//the inner map is the table itself with the key being Integer.toString(node.address) for the destination node
-	Map<String, Map< String, Values >> hash_maps = new HashMap<String, Map<String, Values>>();
+	static Map<String, Map< String, Values >> hash_maps = new HashMap<String, Map<String, Values>>();
 	
 	
 	//setup a queue to store all events. events are classes that store event type, and who is receiving what or sending what where
-	Stack<Events> queue = new Stack<Events>();
+	static Stack<Events> queue = new Stack<Events>();
 	
 	
 	//called after the nodes are all setup send command to start the whole process
-	private void send(String process_name) {
+	private static void send(String process_name) {
 		
 		//get the correct map
 		Map<String, Values> routeTable = hash_maps.get(process_name);
@@ -44,7 +45,9 @@ public class RoutingInfoProt {
 		}
 	}
 	
-	private void receive(String p1, String p2){
+	private static void receive(String p1, String p2){
+		
+		print(receive, p1,p2);
 		
 		boolean isUpdate = false;
 		//for each row in the received table:
@@ -56,8 +59,8 @@ public class RoutingInfoProt {
 			if(!heldTable.containsKey(entry.getValue().address)){
 				//add the address to p2's table with the link "p1" and a
 				//cost of one more than the received cost
-				//TODO
-				
+				Values value = new Values(entry.getValue().address, entry.getValue().link, entry.getValue().cost +1);
+				heldTable.put(Integer.toString(entry.getValue().address), value);
 				isUpdate = true;
 				
 			}
@@ -66,8 +69,8 @@ public class RoutingInfoProt {
 			if( (1+ entry.getValue().cost) < heldTable.get(entry.getKey()).cost ){
 				//place this row in p2's table with the link "p1" and a
 				//cost of one more than the received cost
-				//TODO
-				
+				Values value = new Values(entry.getValue().address, p1, entry.getValue().cost +1);
+				heldTable.put(Integer.toString(entry.getValue().address), value);
 				isUpdate = true;
 			}
 			
@@ -80,10 +83,9 @@ public class RoutingInfoProt {
 					//I.E.
 					//add the address to p2's table with the link "p1" and a
 					//cost of one more than the received cost
-					//TODO
-					
-					
-					isUpdate =true;
+					Values value = new Values(entry.getValue().address, entry.getValue().link, entry.getValue().cost +1);
+					heldTable.put(Integer.toString(entry.getValue().address), value);
+					isUpdate = true;
 				}
 			}
 		}
@@ -93,7 +95,9 @@ public class RoutingInfoProt {
 	}
 	
 	
-	private void setupTable(Input input) {
+	private static void setupTable(Input input) {
+		//TODO
+		
 		
 		//for each node create a hash map to store table
 		for(InputNode inputNode: input.input_nodes){
@@ -139,18 +143,24 @@ public class RoutingInfoProt {
 		}
 	}
 	
-	public void main () {
+	
+	
+	/**
+	 * @param args
+	 */
+	public static void main(String[] args) {
 		Input input = new Input();
-		
 		setupTable(input);
-		
 		for(InputCommand inputCommand : input.input_commands ){
 			send(inputCommand.process_name);
 		}
-		
-		
 		boolean firstTime = true;
 		int queueSize = queue.size();
+		
+		
+		print("table", "p1", "p1");
+		
+		
 		
 		//while the queue isn't empty keep popping off it when a new update arrives,
 		//send events call receive on correct node, receive algorithm can add new send events to the back of stack
@@ -158,10 +168,49 @@ public class RoutingInfoProt {
 		while(true){
 			if(!queue.isEmpty()){
 				Events event = queue.firstElement();
+				queue.remove(0);
+				if(event.event_type.equals(send)){
+					//send the left and right process
+					receive(event.left_process, event.right_process);
+					print(send, event.left_process, event.right_process);
+				}
+				if(event.event_type.equals(receive)){
+					//handle the receive event
+					
+				}
 			}
-			
-			
 		}
+	}
+	
+
+	private static void print(String event_type, String left_process, String right_process) {
+		if(event_type.equals(send)){
+			System.out.print(send + " " + left_process + " " + right_process + " ");
+			Map<String, Values> map = hash_maps.get(left_process); 
+			for(Map.Entry<String, Values> entry : map.entrySet()){
+				System.out.print("("+ entry.getValue().address+ "|" + entry.getValue().link + "|" + entry.getValue().cost + ")" + " ");
+			}
+			System.out.println("");
+		}
+		
+		if(event_type.equals(receive)){
+			System.out.print(receive + " " + left_process + " " + right_process + " ");
+			Map<String, Values> map = hash_maps.get(left_process); 
+			for(Map.Entry<String, Values> entry : map.entrySet()){
+				System.out.print("("+ entry.getValue().address+ "|" + entry.getValue().link + "|" + entry.getValue().cost + ")" + " ");
+			}
+			System.out.println("");
+		}
+		
+		if(event_type.equals("table")){
+			System.out.print("table" + " " + left_process + " " + right_process + " ");
+			Map<String, Values> map = hash_maps.get(left_process); 
+			for(Map.Entry<String, Values> entry : map.entrySet()){
+				System.out.print("("+ entry.getValue().address+ "|" + entry.getValue().link + "|" + entry.getValue().cost + ")" + " ");
+			}
+			System.out.println("");
+		}
+		
 	}
 }
 
@@ -235,7 +284,7 @@ class Events{
 	String right_process;
 	String left_process;
 	
-	public Events(String eventType, String rightProcess, String leftProcess){
+	public Events(String eventType, String leftProcess, String rightProcess){
 		this.event_type = eventType;
 		this.left_process = leftProcess;
 		this.right_process = rightProcess;
@@ -243,4 +292,3 @@ class Events{
 	
 	
 }
-
