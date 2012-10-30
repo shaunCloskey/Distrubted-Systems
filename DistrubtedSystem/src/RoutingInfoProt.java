@@ -63,6 +63,21 @@ public class RoutingInfoProt {
 		for(InputNode inputNode: input.input_nodes){
 			//create a hash table to enter to hash_maps
 			//hash tables contains a hashmap for each process
+			Map<String, Values> map = new HashMap<String,Values>();
+			for(InputLink inputLinks: input.input_links){
+				if(inputLinks.left_name.equals(inputNode.Name)){
+					//might not need this
+					Values value = new Values(int addressOfwhatIsLinkedTO, String whichProcessIsLinkedTo, int cost);
+					map.put(which point it links to where to send, value);
+				}else{
+					if(inputLinks.right_name.equals(inputNode.Name)){
+						//might not need this
+						
+						Values value = new Values(int addressOfwhatIsLinkedTO, String whichProcessIsLinkedTo, int cost);
+						map.put(which point it links to where to send, value);
+					}
+				}
+			}
 		}
 		for(InputLink inputLink: input.input_links){
 			//add the link entry to the correct map
