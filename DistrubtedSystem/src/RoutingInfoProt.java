@@ -4,84 +4,138 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
+import java.util.Stack;
+
+import javax.swing.text.html.HTMLDocument.Iterator;
 
 
-public class RoutingInfoProt { 
-	
-//pusedo code	
-/*	when a table is received by process p1 from process p2:
-		for each row in the received table:
-		if address is not known by p1:
-		add the address to p1's table with the link "p2" and a
-		cost of one more than the received cost
-		if 1 + cost for the address is better than the current known one:
-		place this row in p1's table with the link "p2" and a
-		cost of one more than the received cost
-		if address is known by p1 with a link of p2 then:
-		if the cost for p2 is not exactly one less than p1's cost:
-		act as if this address was unknown to p1
-		if process p1 has updated its table in any way:
-		send updated table to all links */
-	
+public class RoutingInfoProt { 	
 	
 	/*
-	 * need an object for each process that will handle the control of a specific process, spcafically sending of its tables and handling of the receive events
-	 * 
+	 * need an object for each process that will handle the control of a specific process, specifically sending of its tables and handling of the receive events
 	 */
 	
+	String send = "send";
+	String receive = "receive";
+	
+	//map of all tables key is the string of there process_name
+	//the inner map is the table itself with the key being Integer.toString(node.address) for the destination node
 	Map<String, Map< String, Values >> hash_maps = new HashMap<String, Map<String, Values>>();
 	
 	
-	private void send(String process_name, Input input) {
-		// TODO Auto-generated method stub
+	//setup a queue to store all events. events are classes that store event type, and who is receiving what or sending what where
+	Stack<Events> queue = new Stack<Events>();
+	
+	
+	//called after the nodes are all setup send command to start the whole process
+	private void send(String process_name) {
 		
-		//allLinks is the list of all links from sending process to any other link
-		ArrayList<String> allLinks = new ArrayList<String>();
+		//get the correct map
+		Map<String, Values> routeTable = hash_maps.get(process_name);
 		
-		for(InputLink inputLinks: input.input_links){
-			if(inputLinks.left_name.equals(process_name)){
-				//might not need this
-				allLinks.add(inputLinks.right_name);
-			}else{
-				if(inputLinks.right_name.equals(process_name)){
-					//might not need this
-					allLinks.add(inputLinks.left_name);
+		//for each entry in routeTable send the routeTable to the process name
+		for(Map.Entry<String, Values> entry : routeTable.entrySet()){
+			//set up event (send, p1, p2) for send p2 p1's table
+			Values value = entry.getValue();
+			Events event = new Events(send, process_name, value.link);
+			//update the queue with correct send event
+			queue.push(event);
+		}
+	}
+	
+	private void receive(String p1, String p2){
+		
+		boolean isUpdate = false;
+		//for each row in the received table:
+		Map<String, Values> receivedTable = hash_maps.get(p1);
+		Map<String,Values> heldTable = hash_maps.get(p2);
+		for(Map.Entry<String, Values> entry : receivedTable.entrySet()){
+			
+			//if address is not known by p2:
+			if(!heldTable.containsKey(entry.getValue().address)){
+				//add the address to p2's table with the link "p1" and a
+				//cost of one more than the received cost
+				//TODO
+				
+				isUpdate = true;
+				
+			}
+			
+			//if 1 + cost for the address is better than the current known one:
+			if( (1+ entry.getValue().cost) < heldTable.get(entry.getKey()).cost ){
+				//place this row in p2's table with the link "p1" and a
+				//cost of one more than the received cost
+				//TODO
+				
+				isUpdate = true;
+			}
+			
+			//if address is known by p2 with a link of p1 then:
+			if(heldTable.containsKey(entry.getValue().address) && p1.equals(heldTable.get(entry.getKey()).link) ){
+				//if the cost for p1 is not exactly one less than p2's cost:
+				int is_less = entry.getValue().cost - heldTable.get(entry.getKey()).cost;
+				if( is_less != 1){
+					//act as if this address was unknown to p2
+					//I.E.
+					//add the address to p2's table with the link "p1" and a
+					//cost of one more than the received cost
+					//TODO
 					
+					
+					isUpdate =true;
 				}
 			}
 		}
-		
-		for(String processToSend : allLinks){
-			
+		if(isUpdate){
+			send(p2);
 		}
-		
 	}
 	
 	
 	private void setupTable(Input input) {
-		// TODO Auto-generated method stub
+		
+		//for each node create a hash map to store table
 		for(InputNode inputNode: input.input_nodes){
-			//create a hash table to enter to hash_maps
-			//hash tables contains a hashmap for each process
+			
 			Map<String, Values> map = new HashMap<String,Values>();
+			ArrayList<String> links = new ArrayList<String>();
+			
+			//store the names of all linked nodes
 			for(InputLink inputLinks: input.input_links){
 				if(inputLinks.left_name.equals(inputNode.Name)){
 					//might not need this
-					Values value = new Values(int addressOfwhatIsLinkedTO, String whichProcessIsLinkedTo, int cost);
-					map.put(which point it links to where to send, value);
+					links.add(inputLinks.right_name);
 				}else{
 					if(inputLinks.right_name.equals(inputNode.Name)){
 						//might not need this
-						
-						Values value = new Values(int addressOfwhatIsLinkedTO, String whichProcessIsLinkedTo, int cost);
-						map.put(which point it links to where to send, value);
+						links.add(inputLinks.left_name);
 					}
 				}
 			}
-		}
-		for(InputLink inputLink: input.input_links){
-			//add the link entry to the correct map
-			//give it the correct info for its own links
+			
+			//go through all links and add info to table
+			for (String link : links){
+				//address|nameLinkedTo| cost
+				for(InputNode node:input.input_nodes ){
+					//some processes may have more than one address
+					for(int i =0; i<node.local_addresses.length;i++){
+						if(link.equals(node.local_addresses)){
+							Values value = new Values(node.local_addresses[i], link, 1);
+							map.put(Integer.toString(node.local_addresses[i]), value);
+						}
+					}
+				}
+			}
+			
+			//assign the processes link to itself
+			for(int i =0; i<inputNode.local_addresses.length;i++){
+					Values value = new Values(inputNode.local_addresses[i], "local", 0);
+					map.put(Integer.toString(inputNode.local_addresses[i]), value);
+			}
+			
+			//table for chose node is finished store map in hash maps.
+			hash_maps.put(inputNode.Name, map);
 		}
 	}
 	
@@ -91,10 +145,24 @@ public class RoutingInfoProt {
 		setupTable(input);
 		
 		for(InputCommand inputCommand : input.input_commands ){
-			send(inputCommand.process_name, input);
+			send(inputCommand.process_name);
+		}
+		
+		
+		boolean firstTime = true;
+		int queueSize = queue.size();
+		
+		//while the queue isn't empty keep popping off it when a new update arrives,
+		//send events call receive on correct node, receive algorithm can add new send events to the back of stack
+		//TODO
+		while(true){
+			if(!queue.isEmpty()){
+				Events event = queue.firstElement();
+			}
+			
+			
 		}
 	}
-	
 }
 
 
@@ -160,5 +228,19 @@ class Values{
 		this.cost = n_cost;
 		this.link = n_link;
 	}
+}
+
+class Events{
+	String event_type;
+	String right_process;
+	String left_process;
+	
+	public Events(String eventType, String rightProcess, String leftProcess){
+		this.event_type = eventType;
+		this.left_process = leftProcess;
+		this.right_process = rightProcess;
+	}
+	
+	
 }
 
