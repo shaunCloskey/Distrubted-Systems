@@ -326,3 +326,43 @@ class Events{
 	
 	
 }
+
+
+/*
+ *PART 2
+ *
+ * 1. When a process p1 updates its table in response to a table received from process p2, is it necessary
+ * 	  that process p1 sends its updated table back to process p2? Explain the reasoning behind your answer.
+ * 
+ * 	would suspect that if p1 receives table from p2 all updates to p1 surrounding arrival from p2 would use p2 as
+ *  link so it is impossible for p1 to tell p2 about a link through p2 thats better than what p2 already has.
+ * 
+ * however in the case of the start of the algorithm consider below example.
+ * node p1 1
+ * node p2 2
+ * node p3 3
+ * node p4 4
+ * node p5 5
+ * 
+ * link p1 p2
+ * link p1 p4
+ * link p2 p3
+ * link p2 p5
+ * 
+ * if the start of the algorithm is p2  sends update to p1 and p3 and p1 updates its table to include info about
+ * p3 if it doesn't send its table to p2 then p2 wont learn about p1's link to p4 and would never learn about the
+ * node p4 that it has a link to. even in the case where p3 is also linked to p1 p2 learns about p4 but would only
+ * use p3 to send info to p1 to p4 rather than knowing about shorter link from p1.
+ * 
+ * 
+ * 2. Whether you answered yes or no to the first part, does requiring p1 to return its updated table to p2
+ *    increase or decrease the number of events required for the algorithm to converge, or does it depend on
+ *    the network and/or ordering of events? Try to justify your answer with logic and/or statistics from your
+ *    simulator.
+ * 
+ * 
+ * 
+ * 
+ * 
+ * 
+ */
