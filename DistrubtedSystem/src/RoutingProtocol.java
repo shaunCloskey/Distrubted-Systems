@@ -4,10 +4,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Queue;
 import java.util.Stack;
-
-import javax.swing.text.html.HTMLDocument.Iterator;
 
 public class RoutingProtocol {
 
@@ -39,9 +36,12 @@ public class RoutingProtocol {
 		for(Map.Entry<String, Values> entry : routeTable.entrySet()){
 			//set up event (send, p1, p2) for send p2 p1's table
 			Values value = entry.getValue();
-			Events event = new Events(send, process_name, value.link);
-			//update the queue with correct send event
-			queue.push(event);
+			String local = "local";
+			if(!value.link.equals(local)){
+				Events event = new Events(send, process_name, value.link);
+				//update the queue with correct send event
+				queue.push(event);
+			}
 		}
 	}
 	
@@ -56,10 +56,11 @@ public class RoutingProtocol {
 		for(Map.Entry<String, Values> entry : receivedTable.entrySet()){
 			
 			//if address is not known by p2:
-			if(!heldTable.containsKey(entry.getValue().address)){
+			if(!heldTable.containsKey(Integer.toString(entry.getValue().address))){
+				System.out.println( entry.getValue().address + " :address not known");
 				//add the address to p2's table with the link "p1" and a
 				//cost of one more than the received cost
-				Values value = new Values(entry.getValue().address, entry.getValue().link, entry.getValue().cost +1);
+				Values value = new Values(entry.getValue().address, p1, entry.getValue().cost +1);
 				heldTable.put(Integer.toString(entry.getValue().address), value);
 				isUpdate = true;
 				
@@ -67,6 +68,7 @@ public class RoutingProtocol {
 			
 			//if 1 + cost for the address is better than the current known one:
 			if( (1+ entry.getValue().cost) < heldTable.get(entry.getKey()).cost ){
+				System.out.println("cost +1 better than currently known");
 				//place this row in p2's table with the link "p1" and a
 				//cost of one more than the received cost
 				Values value = new Values(entry.getValue().address, p1, entry.getValue().cost +1);
@@ -77,8 +79,10 @@ public class RoutingProtocol {
 			//if address is known by p2 with a link of p1 then:
 			if(heldTable.containsKey(entry.getValue().address) && p1.equals(heldTable.get(entry.getKey()).link) ){
 				//if the cost for p1 is not exactly one less than p2's cost:
-				int is_less = entry.getValue().cost - heldTable.get(entry.getKey()).cost;
+				System.out.println("address known with same link");
+				int is_less = heldTable.get(entry.getKey()).cost - entry.getValue().cost;
 				if( is_less != 1){
+					System.out.println("cost is not exactly less than held");
 					//act as if this address was unknown to p2
 					//I.E.
 					//add the address to p2's table with the link "p1" and a
@@ -96,7 +100,7 @@ public class RoutingProtocol {
 	
 	
 	private static void setupTable(Input input) {
-		//TODO
+
 		
 		
 		//for each node create a hash map to store table
@@ -104,6 +108,12 @@ public class RoutingProtocol {
 			
 			Map<String, Values> map = new HashMap<String,Values>();
 			ArrayList<String> links = new ArrayList<String>();
+			
+			//assign the processes link to itself
+			for(int i =0; i<inputNode.local_addresses.length;i++){
+					Values value = new Values(inputNode.local_addresses[i], "local", 0);
+					map.put(Integer.toString(inputNode.local_addresses[i]), value);
+			}
 			
 			//store the names of all linked nodes
 			for(InputLink inputLinks: input.input_links){
@@ -123,8 +133,8 @@ public class RoutingProtocol {
 				//address|nameLinkedTo| cost
 				for(InputNode node:input.input_nodes ){
 					//some processes may have more than one address
-					for(int i =0; i<node.local_addresses.length;i++){
-						if(link.equals(node.local_addresses)){
+					if(link.equals(node.Name)){
+						for(int i =0; i<node.local_addresses.length;i++){
 							Values value = new Values(node.local_addresses[i], link, 1);
 							map.put(Integer.toString(node.local_addresses[i]), value);
 						}
@@ -132,11 +142,7 @@ public class RoutingProtocol {
 				}
 			}
 			
-			//assign the processes link to itself
-			for(int i =0; i<inputNode.local_addresses.length;i++){
-					Values value = new Values(inputNode.local_addresses[i], "local", 0);
-					map.put(Integer.toString(inputNode.local_addresses[i]), value);
-			}
+			
 			
 			//table for chose node is finished store map in hash maps.
 			hash_maps.put(inputNode.Name, map);
@@ -154,32 +160,37 @@ public class RoutingProtocol {
 		for(InputCommand inputCommand : input.input_commands ){
 			send(inputCommand.process_name);
 		}
-		boolean firstTime = true;
-		int queueSize = queue.size();
-		
 		
 		print("table", "p1", "p1");
+		print("table", "p2","p2");
+		print("table", "p3", "p3");
+		print("table", "p4","p4");
+		
 		
 		
 		
 		//while the queue isn't empty keep popping off it when a new update arrives,
 		//send events call receive on correct node, receive algorithm can add new send events to the back of stack
 		//TODO
-		while(true){
-			if(!queue.isEmpty()){
-				Events event = queue.firstElement();
-				queue.remove(0);
-				if(event.event_type.equals(send)){
-					//send the left and right process
-					receive(event.left_process, event.right_process);
-					print(send, event.left_process, event.right_process);
-				}
-				if(event.event_type.equals(receive)){
-					//handle the receive event
-					
-				}
+		boolean first = true;
+		while(!queue.isEmpty()){
+			
+			Events event = queue.firstElement();
+			queue.remove(0);
+			if(event.event_type.equals(send)){
+				//send the left and right process
+				print(send, event.left_process, event.right_process);
+				receive(event.left_process, event.right_process);
+			}
+			if(event.event_type.equals(receive)){
+				//handle the receive event
+				
 			}
 		}
+		print("table", "p1", "p1");
+		print("table", "p2","p2");
+		print("table", "p3", "p3");
+		print("table", "p4","p4");
 	}
 	
 
