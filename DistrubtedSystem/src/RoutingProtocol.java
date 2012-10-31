@@ -31,6 +31,8 @@ public class RoutingProtocol {
 		
 		//get the correct map
 		Map<String, Values> routeTable = hash_maps.get(process_name);
+		ArrayList <Events> sendEvents = new ArrayList<Events>(); 
+		ArrayList <Events> removeEvents = new ArrayList<Events>();
 		
 		//for each entry in routeTable send the routeTable to the process name
 		for(Map.Entry<String, Values> entry : routeTable.entrySet()){
@@ -40,8 +42,21 @@ public class RoutingProtocol {
 			if(!value.link.equals(local)){
 				Events event = new Events(send, process_name, value.link);
 				//update the queue with correct send event
-				queue.push(event);
+				sendEvents.add(event);
 			}
+		}
+		
+		//this is an attempt to remove muliple sends to a process with more than 1 address as it is not need
+		for(int i = 0; i<sendEvents.size()-1; i++){
+			for(int j = 1; j<sendEvents.size()-i ;j++){
+				if(sendEvents.get(i).right_process.equals(sendEvents.get(j).right_process)){
+					removeEvents.add(sendEvents.get(j));
+				}
+			}
+		}
+		sendEvents.removeAll(removeEvents);
+		for( Events event : sendEvents){
+			queue.push(event);
 		}
 	}
 	
@@ -57,7 +72,7 @@ public class RoutingProtocol {
 			
 			//if address is not known by p2:
 			if(!heldTable.containsKey(Integer.toString(entry.getValue().address))){
-				System.out.println( entry.getValue().address + " :address not known");
+//				System.out.println( entry.getValue().address + " :address not known");
 				//add the address to p2's table with the link "p1" and a
 				//cost of one more than the received cost
 				Values value = new Values(entry.getValue().address, p1, entry.getValue().cost +1);
@@ -68,7 +83,7 @@ public class RoutingProtocol {
 			
 			//if 1 + cost for the address is better than the current known one:
 			if( (1+ entry.getValue().cost) < heldTable.get(entry.getKey()).cost ){
-				System.out.println("cost +1 better than currently known");
+//				System.out.println("cost +1 better than currently known");
 				//place this row in p2's table with the link "p1" and a
 				//cost of one more than the received cost
 				Values value = new Values(entry.getValue().address, p1, entry.getValue().cost +1);
@@ -79,7 +94,7 @@ public class RoutingProtocol {
 			//if address is known by p2 with a link of p1 then:
 			if(heldTable.containsKey(entry.getValue().address) && p1.equals(heldTable.get(entry.getKey()).link) ){
 				//if the cost for p1 is not exactly one less than p2's cost:
-				System.out.println("address known with same link");
+//				System.out.println("address known with same link");
 				int is_less = heldTable.get(entry.getKey()).cost - entry.getValue().cost;
 				if( is_less != 1){
 					System.out.println("cost is not exactly less than held");
@@ -156,6 +171,8 @@ public class RoutingProtocol {
 	 */
 	public static void main(String[] args) {
 		Input input = new Input();
+		long time = System.currentTimeMillis();
+		
 		setupTable(input);
 		for(InputCommand inputCommand : input.input_commands ){
 			send(inputCommand.process_name);
@@ -191,6 +208,12 @@ public class RoutingProtocol {
 		print("table", "p2","p2");
 		print("table", "p3", "p3");
 		print("table", "p4","p4");
+		
+		long finishTime = System.currentTimeMillis();
+		System.out.println("time at start = " + time);
+		System.out.println("time at end = " + finishTime);
+		long timeTaken = finishTime - time;
+		System.out.println("timein miliseconds to sort the table = " + timeTaken);
 	}
 	
 
@@ -214,7 +237,7 @@ public class RoutingProtocol {
 		}
 		
 		if(event_type.equals("table")){
-			System.out.print("table" + " " + left_process + " " + right_process + " ");
+			System.out.print("table" + " " + left_process + " ");
 			Map<String, Values> map = hash_maps.get(left_process); 
 			for(Map.Entry<String, Values> entry : map.entrySet()){
 				System.out.print("("+ entry.getValue().address+ "|" + entry.getValue().link + "|" + entry.getValue().cost + ")" + " ");
