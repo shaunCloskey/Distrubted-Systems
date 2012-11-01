@@ -46,7 +46,7 @@ public class RoutingProtocol {
 			}
 		}
 		
-		//this is an attempt to remove muliple sends to a process with more than 1 address as it is not need
+		//this is an attempt to remove multiple sends to a process with more than 1 address as it is not need
 		for(int i = 0; i<sendEvents.size()-1; i++){
 			for(int j = 1; j<sendEvents.size()-i ;j++){
 				if(sendEvents.get(i).right_process.equals(sendEvents.get(j).right_process)){
@@ -72,7 +72,6 @@ public class RoutingProtocol {
 			
 			//if address is not known by p2:
 			if(!heldTable.containsKey(Integer.toString(entry.getValue().address))){
-//				System.out.println( entry.getValue().address + " :address not known");
 				//add the address to p2's table with the link "p1" and a
 				//cost of one more than the received cost
 				Values value = new Values(entry.getValue().address, p1, entry.getValue().cost +1);
@@ -83,7 +82,6 @@ public class RoutingProtocol {
 			
 			//if 1 + cost for the address is better than the current known one:
 			if( (1+ entry.getValue().cost) < heldTable.get(entry.getKey()).cost ){
-//				System.out.println("cost +1 better than currently known");
 				//place this row in p2's table with the link "p1" and a
 				//cost of one more than the received cost
 				Values value = new Values(entry.getValue().address, p1, entry.getValue().cost +1);
@@ -94,7 +92,6 @@ public class RoutingProtocol {
 			//if address is known by p2 with a link of p1 then:
 			if(heldTable.containsKey(entry.getValue().address) && p1.equals(heldTable.get(entry.getKey()).link) ){
 				//if the cost for p1 is not exactly one less than p2's cost:
-//				System.out.println("address known with same link");
 				int is_less = heldTable.get(entry.getKey()).cost - entry.getValue().cost;
 				if( is_less != 1){
 					System.out.println("cost is not exactly less than held");
@@ -133,11 +130,9 @@ public class RoutingProtocol {
 			//store the names of all linked nodes
 			for(InputLink inputLinks: input.input_links){
 				if(inputLinks.left_name.equals(inputNode.Name)){
-					//might not need this
 					links.add(inputLinks.right_name);
 				}else{
 					if(inputLinks.right_name.equals(inputNode.Name)){
-						//might not need this
 						links.add(inputLinks.left_name);
 					}
 				}
@@ -173,6 +168,7 @@ public class RoutingProtocol {
 		Input input = new Input();
 		long time = System.currentTimeMillis();
 		
+		int messageCount = 0;
 		setupTable(input);
 		for(InputCommand inputCommand : input.input_commands ){
 			send(inputCommand.process_name);
@@ -188,20 +184,15 @@ public class RoutingProtocol {
 		
 		//while the queue isn't empty keep popping off it when a new update arrives,
 		//send events call receive on correct node, receive algorithm can add new send events to the back of stack
-		//TODO
-		boolean first = true;
 		while(!queue.isEmpty()){
 			
 			Events event = queue.firstElement();
 			queue.remove(0);
 			if(event.event_type.equals(send)){
 				//send the left and right process
+				messageCount++;
 				print(send, event.left_process, event.right_process);
 				receive(event.left_process, event.right_process);
-			}
-			if(event.event_type.equals(receive)){
-				//handle the receive event
-				
 			}
 		}
 		print("table", "p1", "p1");
@@ -214,6 +205,7 @@ public class RoutingProtocol {
 		System.out.println("time at end = " + finishTime);
 		long timeTaken = finishTime - time;
 		System.out.println("timein miliseconds to sort the table = " + timeTaken);
+		System.out.println("total amount of messages : " + messageCount);
 	}
 	
 
@@ -351,8 +343,8 @@ class Events{
  * 
  * if the start of the algorithm is p2  sends update to p1 and p3 and p1 updates its table to include info about
  * p3 if it doesn't send its table to p2 then p2 wont learn about p1's link to p4 and would never learn about the
- * node p4 that it has a link to. even in the case where p3 is also linked to p1 p2 learns about p4 but would only
- * use p3 to send info to p1 to p4 rather than knowing about shorter link from p1.
+ * node p4 that it has a link to.
+ * so although it is not necessary for it to send this in every system there are cases where it is necessary.
  * 
  * 
  * 2. Whether you answered yes or no to the first part, does requiring p1 to return its updated table to p2
@@ -360,9 +352,34 @@ class Events{
  *    the network and/or ordering of events? Try to justify your answer with logic and/or statistics from your
  *    simulator.
  * 
+ * it can depend on the network itself an the ordering of events, if you consider the example above then its needed to have p1 return table to p2.
+ * however if you consider the example below:
+ * node p1 1
+ * node p2 2
+ * node p3 3
+ * node p4 4
+ * mode p5 5
+ * node p6 6
  * 
+ * link p1 p2
+ * link p1 p4
+ * link p1 p3
+ * link p2 p3
+ * link p2 p5
+ * link p3 p6
  * 
+ * in this case consider the below messages being sent:
+ * the system will learn all the nodes and will be done by sending less messages and if you alter the ordering of when messages are sent and arrive ie for first message if p2 sends info can go two ways
+ * 1. p1 gets message from p2 and updates sends to nodes.
+ *    p3 gets message from p1 and updates sends to all nodes.
+ *    p3 gets message from p2 updates sends to all nodes.
  * 
+ * or
+ * 2. p1 gets message from p2 updates sends to nodes.
+ *    p3 gets message from p2 updates sends to nodes.
+ *    
+ * this also alters the amount of messages that will be sent across the network.
  * 
+ * so the answer to this question is that the amount of messages depends on the purposed network and how the ordering of messages arrive for this network.
  * 
  */
